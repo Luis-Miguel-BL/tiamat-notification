@@ -1,7 +1,10 @@
 package vo
 
 import (
+	"fmt"
 	"time"
+
+	"github.com/Luis-Miguel-BL/tiamat-notification/domain/util"
 )
 
 type Contact struct {
@@ -33,11 +36,21 @@ func (e *Contact) NewContact(emailAddress string, phoneNumber string) (contact *
 }
 
 func (e *Contact) Validate() error {
-	if err := e.Email.EmailAddress.Validate(); err != nil {
-		return err
+	hasSomeContact := false
+	if !util.IsEmpty(e.Email.EmailAddress.String()) {
+		if err := e.Email.EmailAddress.Validate(); err != nil {
+			return err
+		}
+		hasSomeContact = true
 	}
-	if err := e.Phone.PhoneNumber.Validate(); err != nil {
-		return err
+	if !util.IsEmpty(e.Phone.PhoneNumber.String()) {
+		if err := e.Phone.PhoneNumber.Validate(); err != nil {
+			return err
+		}
+		hasSomeContact = true
+	}
+	if !hasSomeContact {
+		return fmt.Errorf("contact cannot be empty")
 	}
 	return nil
 }

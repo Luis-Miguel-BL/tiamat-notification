@@ -14,6 +14,13 @@ type Aggregate struct {
 	mu                *sync.Mutex
 }
 
+func NewAggregate(aggregateType AggregateType, aggregateID AggregateID) *Aggregate {
+	return &Aggregate{
+		AggregateID:   aggregateID,
+		AggregateType: aggregateType,
+		mu:            &sync.Mutex{},
+	}
+}
 func (a *Aggregate) AppendEvent(event DomainEvent) {
 	a.UncommittedEvents = append(a.UncommittedEvents, event)
 }

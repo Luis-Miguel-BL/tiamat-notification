@@ -7,42 +7,60 @@ import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/domain/model/campaign"
 	"github.com/Luis-Miguel-BL/tiamat-notification/domain/model/segment"
 	"github.com/Luis-Miguel-BL/tiamat-notification/domain/model/workspace"
-	"github.com/Luis-Miguel-BL/tiamat-notification/domain/util"
 	"github.com/Luis-Miguel-BL/tiamat-notification/domain/vo"
 )
 
 var AggregateType = domain.AggregateType("customer")
 
 type CustomerID string
-type Customer struct {
-	*domain.Aggregate
-	CustomerID      CustomerID
-	WorkspaceID     workspace.WorkspaceID
-	Name            vo.CustomerName
-	Contact         vo.Contact
-	Events          map[vo.Slug][]CustomerEvent
-	CurrentActions  map[campaign.CampaignID]CurrentAction
-	CurrentSegments map[segment.SegmentID]CurrentSegment
-	CustomData      map[string]interface{}
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
+
+func NewCustomerID(customerID string) CustomerID {
+	return CustomerID(customerID)
 }
 
-func NewCustomer(customerID string, workspaceID string, name string) (customer *Customer) {
+type Customer struct {
+	*domain.Aggregate
+	CustomerID       CustomerID
+	WorkspaceID      workspace.WorkspaceID
+	Name             vo.PersonName
+	Contact          vo.Contact
+	CustomAttributes vo.CustomAttributes
+	Events           map[vo.Slug][]CustomerEvent
+	ActionsTriggered map[campaign.CampaignID][]ActionsTriggered
+	CurrentSegments  map[segment.SegmentID]CurrentSegment
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+}
+
+type NewCustomerInput struct {
+	CustomerID       CustomerID
+	WorkspaceID      workspace.WorkspaceID
+	Name             vo.PersonName
+	Contact          vo.Contact
+	CustomAttributes vo.CustomAttributes
+}
+
+func NewCustomer(input NewCustomerInput) (customer *Customer) {
 	return &Customer{
-		CustomerID:  CustomerID(customerID),
-		WorkspaceID: workspace.WorkspaceID(workspaceID),
-		Name:        vo.CustomerName(name),
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		Aggregate:        domain.NewAggregate(AggregateType, domain.AggregateID(input.CustomerID)),
+		CustomerID:       input.CustomerID,
+		WorkspaceID:      input.WorkspaceID,
+		Name:             input.Name,
+		Contact:          input.Contact,
+		CustomAttributes: input.CustomAttributes,
+		Events:           make(map[vo.Slug][]CustomerEvent),
+		ActionsTriggered: make(map[campaign.CampaignID][]ActionsTriggered),
+		CurrentSegments:  make(map[segment.SegmentID]CurrentSegment),
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
 	}
 }
 
 func (e *Customer) Validate() error {
-	if util.IsEmpty(string(e.CustomerID)) {
+	if e.CustomerID == "" {
 		return domain.NewInvalidEmptyParamError("customer_id")
 	}
-	if util.IsEmpty(string(e.WorkspaceID)) {
+	if e.WorkspaceID == "" {
 		return domain.NewInvalidEmptyParamError("workspace_id")
 	}
 	if err := e.Name.Validate(); err != nil {
@@ -54,10 +72,23 @@ func (e *Customer) Validate() error {
 	return nil
 }
 
-func (e *Customer) AddContact(contact vo.Contact) error {
-	if err := contact.Validate(); err != nil {
-		return err
+func (e *Customer) Serialize() (serialized segment.SerializedCustomer) {
+	serialized.Attributes = segment.SerializedAttributes(e.CustomAttributes)
+	serialized.Attributes["name"] = e.Name
+	serialized.Attributes["first_name"] = e.Name.GetFirstName()
+	serialized.Attributes["email"] = e.Contact.Email.EmailAddress
+	serialized.Attributes["phone"] = e.Contact.Phone.PhoneNumber
+
+	serialized.Events = make(map[vo.Slug]segment.SerializedAttributes)
+
+}
+func (e *Customer) AppendEvent(event CustomerEvent) {
+	e.Events[event.Slug] = append(e.Events[event.Slug], event)
+}
+
+func (e *Customer) MatchWithSegment(segment segment.Segment) (matched bool) {
+	matched = true
+	for _, condition := range segment.Conditions {
+		condition.IsMatch()
 	}
-	e.Contact = contact
-	return nil
 }

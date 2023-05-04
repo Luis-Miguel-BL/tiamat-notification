@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/domain"
+	"github.com/Luis-Miguel-BL/tiamat-notification/domain/model/segment"
 	"github.com/Luis-Miguel-BL/tiamat-notification/domain/vo"
 )
 
@@ -17,6 +18,8 @@ type Campaign struct {
 	SendToUnsubscribed bool
 	FirstActionID      ActionID
 	Actions            map[ActionID]Action
+	Triggers           []segment.SegmentID
+	Filters            []segment.SegmentID
 	CreatedAt          time.Time
 	UpdatedAt          time.Time
 }
