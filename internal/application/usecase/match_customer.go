@@ -45,6 +45,7 @@ func (uc *MatchCustomerUsecase) MatchCustomer(ctx context.Context, command comma
 
 	for _, activeCampaign := range activeCampaigns {
 
+		isMatchWithTheTriggers := uc.matcherService.MatchCustomerWithSegments(ctx, &customer)
 	}
 
 	eventSlug, err := vo.NewSlug(command.Slug)
