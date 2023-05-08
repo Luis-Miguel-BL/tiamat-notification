@@ -9,7 +9,7 @@ import (
 )
 
 type MatcherService interface {
-	MatchCustomerWithSegments(ctx context.Context, customer *model.Customer, segments []model.Segment) (isMatch bool)
+	MatchCustomerWithSegment(ctx context.Context, customer *model.Customer, segment model.Segment) (isMatch bool)
 }
 
 type customerSegmentation struct {
@@ -22,25 +22,20 @@ func NewMatcherService(repo repository.CustomerRepository) MatcherService {
 	}
 }
 
-func (s *customerSegmentation) MatchCustomerWithSegments(ctx context.Context, customer *model.Customer, segments []model.Segment) (isMatch bool) {
-	isMatch = true
-	for _, segment := range segments {
-	conditionLoop:
-		for _, condition := range segment.Conditions {
-			if !condition.IsMatch(customer.Serialize()) {
-				isMatch = false
-				break conditionLoop
-			}
+func (s *customerSegmentation) MatchCustomerWithSegment(ctx context.Context, customer *model.Customer, segment model.Segment) (isMatch bool) {
+	for _, condition := range segment.Conditions {
+		if !condition.IsMatch(customer.Serialize()) {
+			return false
 		}
-
-		currentSegment := model.NewCurrentSegment(
-			model.NewCurrentSegmentInput{
-				CurrentSegmentID: model.NewCurrentSegmentID(util.NewUUID()),
-				SegmentID:        segment.SegmentID,
-			},
-		)
-		customer.AppendCurrentSegment(*currentSegment)
 	}
 
-	return isMatch
+	currentSegment := model.NewCurrentSegment(
+		model.NewCurrentSegmentInput{
+			CurrentSegmentID: model.NewCurrentSegmentID(util.NewUUID()),
+			SegmentID:        segment.SegmentID,
+		},
+	)
+	customer.AppendCurrentSegment(*currentSegment)
+
+	return true
 }

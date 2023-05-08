@@ -7,7 +7,6 @@ import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/repository"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/service"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"
 )
 
 type MatchCustomerUsecase struct {
@@ -44,33 +43,30 @@ func (uc *MatchCustomerUsecase) MatchCustomer(ctx context.Context, command comma
 	}
 
 	for _, activeCampaign := range activeCampaigns {
+		isMatchWithTheTriggers, err := uc.matchAllSegments(ctx, workspaceID, activeCampaign.Triggers(), &customer)
+		if err != nil {
+			return err
+		}
+		if isMatchWithTheTriggers {
 
-		isMatchWithTheTriggers := uc.matcherService.MatchCustomerWithSegments(ctx, &customer)
+		}
+
 	}
 
-	eventSlug, err := vo.NewSlug(command.Slug)
-	if err != nil {
-		return err
-	}
-	customAttr, err := vo.NewCustomAttributes(command.CustomAttributes)
-	if err != nil {
-		return err
-	}
-
-	customerEventToCreate, err := model.NewCustomerEvent(
-		model.NewCustomerEventInput{
-			CustomerEventID:  customerEventID,
-			Slug:             eventSlug,
-			CustomAttributes: customAttr,
-		},
-	)
-	if err != nil {
-		return err
-	}
-
-	err = uc.repo.MatchCustomer(ctx, customerID, workspaceID, *customerEventToCreate)
-
-	return err
+	return nil
 }
 
-func matchAllSegments(ctx context.Context)
+func (uc *MatchCustomerUsecase) matchAllSegments(ctx context.Context, workspaceID model.WorkspaceID, segmentIDs []model.SegmentID, customer *model.Customer) (isMatchAll bool, err error) {
+	isMatchAll = true
+	for _, segmentID := range segmentIDs {
+		segment, err := uc.segmentRepo.GetByID(ctx, segmentID, workspaceID)
+		if err != nil {
+			return isMatchAll, err
+		}
+		isMatchOne := uc.matcherService.MatchCustomerWithSegment(ctx, customer, segment)
+		if !isMatchOne {
+			isMatchAll = false
+		}
+	}
+	return isMatchAll, nil
+}
