@@ -116,13 +116,17 @@ func (e *Customer) GetLastOccurrenceOfEvent(eventSlug vo.Slug) (lastEvent Custom
 	return lastEvent
 }
 
-func (e *Customer) GetLastActionTrigged(campaignID CampaignID) (lastActionTrigged ActionTriggered) {
-	for _, action := range e.actionsTriggered[campaignID] {
-		if action.TriggeredAt.After(lastActionTrigged.TriggeredAt) {
+func (e *Customer) GetLastActionTrigged(campaignID CampaignID) (lastActionTrigged ActionTriggered, alreadyTriggered bool) {
+	actionsTriggered, alreadyTriggered := e.actionsTriggered[campaignID]
+	if !alreadyTriggered {
+		return lastActionTrigged, alreadyTriggered
+	}
+	for _, action := range actionsTriggered {
+		if action.TriggeredAt().After(lastActionTrigged.TriggeredAt()) {
 			lastActionTrigged = action
 		}
 	}
-	return lastActionTrigged
+	return lastActionTrigged, alreadyTriggered
 }
 
 func (e *Customer) AppendCurrentSegment(currentSegment CurrentSegment) {

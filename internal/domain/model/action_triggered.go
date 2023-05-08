@@ -5,6 +5,11 @@ import (
 )
 
 type ActionTriggeredID string
+
+func NewActionTriggeredID(actionTriggeredID string) ActionTriggeredID {
+	return ActionTriggeredID(actionTriggeredID)
+}
+
 type ActionTriggeredStatus string
 
 const (
@@ -14,10 +19,14 @@ const (
 )
 
 type ActionTriggered struct {
-	ActionTriggeredID ActionTriggeredID
-	CampaignID        CampaignID
-	ActionID          ActionID
-	TriggeredAt       time.Time
-	Status            ActionTriggeredStatus
-	StatusDescription string
+	actionTriggeredID ActionTriggeredID
+	campaignID        CampaignID
+	actionID          ActionID
+	triggeredAt       time.Time
+	status            ActionTriggeredStatus
+	statusDescription string
+}
+
+func (e *ActionTriggered) TriggeredAt() time.Time {
+	return e.triggeredAt
 }

@@ -12,17 +12,17 @@ type MatcherService interface {
 	MatchCustomerWithSegment(ctx context.Context, customer *model.Customer, segment model.Segment) (isMatch bool)
 }
 
-type customerSegmentation struct {
+type matcherService struct {
 	repo repository.CustomerRepository
 }
 
 func NewMatcherService(repo repository.CustomerRepository) MatcherService {
-	return &customerSegmentation{
+	return &matcherService{
 		repo: repo,
 	}
 }
 
-func (s *customerSegmentation) MatchCustomerWithSegment(ctx context.Context, customer *model.Customer, segment model.Segment) (isMatch bool) {
+func (s *matcherService) MatchCustomerWithSegment(ctx context.Context, customer *model.Customer, segment model.Segment) (isMatch bool) {
 	for _, condition := range segment.Conditions {
 		if !condition.IsMatch(customer.Serialize()) {
 			return false
