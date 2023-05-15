@@ -10,6 +10,11 @@ import (
 var AggregateTypeCampaign = domain.AggregateType("campaign")
 
 type CampaignID string
+
+func NewCampaignID(campaignID string) CampaignID {
+	return CampaignID(campaignID)
+}
+
 type Campaign struct {
 	*domain.AggregateRoot
 	campaignID         CampaignID
@@ -38,6 +43,20 @@ func (e *Campaign) Filters() []SegmentID {
 func (e *Campaign) RetriggerDelay() time.Duration {
 	return e.retriggerDelay
 }
+func (e *Campaign) FirstActionID() ActionID {
+	return e.firstActionID
+}
+func (e *Campaign) Actions() map[ActionID]Action {
+	return e.actions
+}
+func (e *Campaign) Action(actionID ActionID) (action Action, err error) {
+	action, found := e.actions[actionID]
+	if !found {
+		return action, domain.NewNotFoundError("action")
+	}
+	return action, nil
+}
+
 func (e *Campaign) MustBeTriggered(lastTriggeredDate time.Time) bool {
 	if lastTriggeredDate.IsZero() {
 		return true

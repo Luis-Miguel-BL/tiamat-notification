@@ -10,3 +10,6 @@ func NewInvalidEmptyParamError(paramName string) DomainError {
 func NewInvalidParamError(paramName string) DomainError {
 	return DomainError(fmt.Errorf("param %s is invalid", paramName))
 }
+func NewNotFoundError(description string) DomainError {
+	return DomainError(fmt.Errorf("%s not found", description))
+}

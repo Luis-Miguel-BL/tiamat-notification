@@ -3,19 +3,13 @@ package model
 import (
 	"time"
 
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model/action_behavior"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"
 )
 
 type ActionID string
-type Action struct {
-	ActionID     ActionID
-	Slug         vo.Slug
-	Type         ActionType
-	NextActionID ActionID
-	Behavior     ActionBehavior
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+
+func NewActionID(actionID string) ActionID {
+	return ActionID(actionID)
 }
 
 type ActionType string
@@ -26,13 +20,24 @@ const (
 	ActionTypeFlow         ActionType = "flow"
 )
 
-type ActionBehavior struct {
-	SendEmail    action_behavior.SendEmail
-	SendSMS      action_behavior.SendSMS
-	SendWhatsApp action_behavior.SendWhatsApp
-	WaitFor      action_behavior.WaitFor
-	WaitUntil    action_behavior.WaitUntil
-	IfAttribute  action_behavior.IfAttribute
-	Random       action_behavior.Random
-	Split        action_behavior.Split
+type Action struct {
+	actionID     ActionID
+	campaignID   CampaignID
+	slug         vo.Slug
+	actionType   ActionType
+	nextActionID ActionID
+	behaviorType BehaviorType
+	behavior     ActionBehavior
+	createdAt    time.Time
+	updatedAt    time.Time
+}
+
+func (e *Action) CampaignID() CampaignID {
+	return e.campaignID
+}
+func (e *Action) ActionID() ActionID {
+	return e.actionID
+}
+func (e *Action) BehaviorType() BehaviorType {
+	return e.behaviorType
 }

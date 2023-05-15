@@ -5,7 +5,6 @@ import (
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/repository"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/util"
 )
 
 type MatcherService interface {
@@ -13,13 +12,10 @@ type MatcherService interface {
 }
 
 type matcherService struct {
-	repo repository.CustomerRepository
 }
 
 func NewMatcherService(repo repository.CustomerRepository) MatcherService {
-	return &matcherService{
-		repo: repo,
-	}
+	return &matcherService{}
 }
 
 func (s *matcherService) MatchCustomerWithSegment(ctx context.Context, customer *model.Customer, segment model.Segment) (isMatch bool) {
@@ -29,13 +25,17 @@ func (s *matcherService) MatchCustomerWithSegment(ctx context.Context, customer 
 		}
 	}
 
-	currentSegment := model.NewCurrentSegment(
-		model.NewCurrentSegmentInput{
-			CurrentSegmentID: model.NewCurrentSegmentID(util.NewUUID()),
-			SegmentID:        segment.SegmentID,
+	satisfiedSegment, err := model.NewSatisfiedSegment(
+		model.NewSatisfiedSegmentInput{
+			CustomerID:  customer.CustomerID(),
+			WorkspaceID: customer.WorkspaceID(),
+			SegmentID:   segment.SegmentID,
 		},
 	)
-	customer.AppendCurrentSegment(*currentSegment)
+	if err != nil {
+		return false
+	}
+	customer.AppendSatisfiedSegment(*satisfiedSegment)
 
 	return true
 }

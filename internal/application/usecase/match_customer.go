@@ -14,14 +14,24 @@ type MatchCustomerUsecase struct {
 	segmentRepo    repository.SegmentRepository
 	campaignRepo   repository.CampaignRepository
 	matcherService service.MatcherService
+	triggerService service.TriggerService
 }
 
-func NewMatchCustomerUsecase(customerRepo repository.CustomerRepository, segmentRepo repository.SegmentRepository, campaignRepo repository.CampaignRepository, matcherService service.MatcherService) *MatchCustomerUsecase {
+type NewMatchCustomerUsecaseInput struct {
+	CustomerRepo   repository.CustomerRepository
+	SegmentRepo    repository.SegmentRepository
+	CampaignRepo   repository.CampaignRepository
+	MatcherService service.MatcherService
+	TriggerService service.TriggerService
+}
+
+func NewMatchCustomerUsecase(input NewMatchCustomerUsecaseInput) *MatchCustomerUsecase {
 	return &MatchCustomerUsecase{
-		customerRepo:   customerRepo,
-		segmentRepo:    segmentRepo,
-		campaignRepo:   campaignRepo,
-		matcherService: matcherService,
+		customerRepo:   input.CustomerRepo,
+		segmentRepo:    input.SegmentRepo,
+		campaignRepo:   input.CampaignRepo,
+		matcherService: input.MatcherService,
+		triggerService: input.TriggerService,
 	}
 }
 
@@ -36,6 +46,9 @@ func (uc *MatchCustomerUsecase) MatchCustomer(ctx context.Context, command comma
 	if err != nil {
 		return err
 	}
+	defer func() {
+		uc.customerRepo.Save(ctx, customer)
+	}()
 
 	activeCampaigns, err := uc.campaignRepo.FindActiveCampaigns(ctx, workspaceID)
 	if err != nil {
@@ -48,7 +61,10 @@ func (uc *MatchCustomerUsecase) MatchCustomer(ctx context.Context, command comma
 			return err
 		}
 		if isMatchWithTheTriggers {
-
+			err = uc.triggerService.TriggerCampaign(ctx, &customer, activeCampaign)
+			if err != nil {
+				continue
+			}
 		}
 
 	}

@@ -23,16 +23,16 @@ type SerializedCustomer struct {
 
 type Customer struct {
 	*domain.AggregateRoot
-	customerID       CustomerID
-	workspaceID      WorkspaceID
-	name             vo.PersonName
-	contact          vo.Contact
-	customAttributes vo.CustomAttributes
-	events           map[vo.Slug][]CustomerEvent
-	actionsTriggered map[CampaignID][]ActionTriggered
-	currentSegments  map[SegmentID]CurrentSegment
-	createdAt        time.Time
-	updatedAt        time.Time
+	customerID        CustomerID
+	workspaceID       WorkspaceID
+	name              vo.PersonName
+	contact           vo.Contact
+	customAttributes  vo.CustomAttributes
+	events            map[vo.Slug][]CustomerEvent
+	actionsTriggered  map[CampaignID]map[ActionID]ActionTriggered
+	satisfiedSegments map[SegmentID]SatisfiedSegment
+	createdAt         time.Time
+	updatedAt         time.Time
 }
 
 type NewCustomerInput struct {
@@ -51,17 +51,17 @@ func NewCustomer(input NewCustomerInput) (customer *Customer, err domain.DomainE
 		return customer, domain.NewInvalidEmptyParamError("WorkspaceID")
 	}
 	customer = &Customer{
-		AggregateRoot:    domain.NewAggregateRoot(AggregateTypeCustomer, domain.AggregateID(input.CustomerID)),
-		customerID:       input.CustomerID,
-		workspaceID:      input.WorkspaceID,
-		name:             input.Name,
-		contact:          input.Contact,
-		customAttributes: input.CustomAttributes,
-		events:           make(map[vo.Slug][]CustomerEvent),
-		actionsTriggered: make(map[CampaignID][]ActionTriggered),
-		currentSegments:  make(map[SegmentID]CurrentSegment),
-		createdAt:        time.Now(),
-		updatedAt:        time.Now(),
+		AggregateRoot:     domain.NewAggregateRoot(AggregateTypeCustomer, domain.AggregateID(input.CustomerID)),
+		customerID:        input.CustomerID,
+		workspaceID:       input.WorkspaceID,
+		name:              input.Name,
+		contact:           input.Contact,
+		customAttributes:  input.CustomAttributes,
+		events:            make(map[vo.Slug][]CustomerEvent),
+		actionsTriggered:  make(map[CampaignID]map[ActionID]ActionTriggered),
+		satisfiedSegments: make(map[SegmentID]SatisfiedSegment),
+		createdAt:         time.Now(),
+		updatedAt:         time.Now(),
 	}
 
 	customer.AggregateRoot.AppendEvent(event.CustomerCreatedEvent{
@@ -129,19 +129,88 @@ func (e *Customer) GetLastActionTrigged(campaignID CampaignID) (lastActionTrigge
 	return lastActionTrigged, alreadyTriggered
 }
 
-func (e *Customer) AppendCurrentSegment(currentSegment CurrentSegment) {
-	e.currentSegments[currentSegment.SegmentID()] = currentSegment
+func (e *Customer) AppendSatisfiedSegment(satisfiedSegment SatisfiedSegment) {
+	e.satisfiedSegments[satisfiedSegment.SegmentID()] = satisfiedSegment
 
 	e.AggregateRoot.AppendEvent(event.CustomerMatched{
 		DomainEventBase: domain.NewDomainEventBase(domain.NewDomainEventBaseInput{
 			EventType:     event.CustomerEventOccurredEventType,
-			OccurredAt:    currentSegment.MatchedAt(),
+			OccurredAt:    satisfiedSegment.MatchedAt(),
 			AggregateType: e.AggregateType(),
 			AggregateID:   e.AggregateID(),
 		}),
 		CustomerID:  string(e.customerID),
 		WorkspaceID: string(e.workspaceID),
-		SegmentID:   string(currentSegment.SegmentID()),
-		MatchedAt:   currentSegment.MatchedAt(),
+		SegmentID:   string(satisfiedSegment.SegmentID()),
+		MatchedAt:   satisfiedSegment.MatchedAt(),
 	})
+}
+
+func (e *Customer) TriggerAction(action Action) (err error) {
+	actionTriggered, err := NewActionTriggered(NewActionTriggeredInput{
+		WorkspaceID: e.workspaceID,
+		CustomerID:  e.customerID,
+		CampaignID:  action.campaignID,
+		ActionID:    action.actionID,
+	})
+	if err != nil {
+		return err
+	}
+
+	e.AggregateRoot.AppendEvent(event.ActionTrigged{
+		DomainEventBase: domain.NewDomainEventBase(domain.NewDomainEventBaseInput{
+			EventType:     event.CustomerEventOccurredEventType,
+			OccurredAt:    actionTriggered.TriggeredAt(),
+			AggregateType: e.AggregateType(),
+			AggregateID:   e.AggregateID(),
+		}),
+		CustomerID:        string(e.customerID),
+		WorkspaceID:       string(e.workspaceID),
+		CampaignID:        string(actionTriggered.campaignID),
+		ActionID:          string(actionTriggered.actionID),
+		ActionTriggeredID: string(actionTriggered.actionTriggeredID),
+		TriggeredAt:       actionTriggered.triggeredAt,
+	})
+	return nil
+}
+
+// func (e *Customer) GetActionTriggered(campaignID CampaignID, actionID ActionID) (actionTriggered ActionTriggered, found bool) {
+// 	actionTriggered, found = e.actionsTriggered[campaignID][actionID]
+// 	return actionTriggered, found
+// }
+
+func (e *Customer) FinishActionTriggered(action Action, status ActionTriggeredStatus, nextActionID ActionID) (err error) {
+	actionTriggered, ok := e.actionsTriggered[action.campaignID][action.actionID]
+	if !ok {
+		return domain.NewNotFoundError("action-triggered")
+	}
+	actionTriggered.status = status
+	e.actionsTriggered[action.campaignID][action.actionID] = actionTriggered
+
+	eventBase := domain.NewDomainEventBase(domain.NewDomainEventBaseInput{
+		EventType:     event.CustomerEventOccurredEventType,
+		OccurredAt:    actionTriggered.TriggeredAt(),
+		AggregateType: e.AggregateType(),
+		AggregateID:   e.AggregateID(),
+	})
+
+	switch status {
+	case ActionTriggeredStatusSuccess:
+	case ActionTriggeredStatusScheduled:
+	case ActionTriggeredStatusFailed:
+	case ActionTriggeredStatusFilterMatch:
+		e.AggregateRoot.AppendEvent(event.CampaignFilterMatched{
+			DomainEventBase:   eventBase,
+			CustomerID:        string(e.customerID),
+			WorkspaceID:       string(e.workspaceID),
+			CampaignID:        string(actionTriggered.campaignID),
+			ActionID:          string(actionTriggered.actionID),
+			ActionTriggeredID: string(actionTriggered.actionTriggeredID),
+			TriggeredAt:       actionTriggered.triggeredAt,
+		})
+	default:
+		return domain.NewInvalidParamError("ActionTriggeredStatus")
+	}
+
+	return nil
 }

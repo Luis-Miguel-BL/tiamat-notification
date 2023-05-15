@@ -6,6 +6,7 @@ import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/event"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/util"
 )
 
 type CustomerEventID string
@@ -25,7 +26,6 @@ type CustomerEvent struct {
 }
 
 type NewCustomerEventInput struct {
-	CustomerEventID  CustomerEventID
 	CustomerID       CustomerID
 	WorkspaceID      WorkspaceID
 	Slug             vo.Slug
@@ -33,15 +33,12 @@ type NewCustomerEventInput struct {
 }
 
 func NewCustomerEvent(input NewCustomerEventInput) (customerEvent *CustomerEvent, err domain.DomainError) {
-	if input.CustomerEventID == "" {
-		return customerEvent, domain.NewInvalidEmptyParamError("CustomerEventID")
-	}
 	if input.Slug == "" {
 		return customerEvent, domain.NewInvalidEmptyParamError("Slug")
 	}
 	customerEvent = &CustomerEvent{
 		AggregateRoot:    domain.NewAggregateRoot(AggregateTypeCustomer, domain.AggregateID(input.CustomerID)),
-		customerEventID:  input.CustomerEventID,
+		customerEventID:  CustomerEventID(util.NewUUID()),
 		customerID:       input.CustomerID,
 		workspaceID:      input.WorkspaceID,
 		slug:             input.Slug,
@@ -58,7 +55,7 @@ func NewCustomerEvent(input NewCustomerEventInput) (customerEvent *CustomerEvent
 			}),
 			CustomerID:       string(input.CustomerID),
 			WorkspaceID:      string(input.WorkspaceID),
-			CustomerEventID:  string(input.CustomerEventID),
+			CustomerEventID:  string(customerEvent.customerEventID),
 			Slug:             customerEvent.Slug(),
 			CustomAttributes: customerEvent.CustomAttributes(),
 		})

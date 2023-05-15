@@ -25,8 +25,17 @@ func (s *triggerService) TriggerCampaign(ctx context.Context, customer *model.Cu
 	lastActionTriggered, alreadyTriggered := customer.GetLastActionTrigged(campaign.CampaignID())
 	if alreadyTriggered {
 		if !campaign.MustBeTriggered(lastActionTriggered.TriggeredAt()) {
-			return
+			return nil
 		}
 	}
+	firstAction, err := campaign.Action(campaign.FirstActionID())
+	if err != nil {
+		return err
+	}
 
+	err = customer.TriggerAction(firstAction)
+	if err != nil {
+		return err
+	}
+	return nil
 }
