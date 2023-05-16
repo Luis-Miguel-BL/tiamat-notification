@@ -3,7 +3,7 @@ package usecase
 import (
 	"context"
 
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/application/command"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/application/ignition/command"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/repository"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"

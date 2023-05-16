@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/util"
 )
 
@@ -31,6 +32,7 @@ type ActionTriggered struct {
 	actionID          ActionID
 	triggeredAt       time.Time
 	status            ActionTriggeredStatus
+	trackingData      map[vo.Slug]vo.CustomAttributes
 }
 
 type NewActionTriggeredInput struct {
@@ -81,4 +83,7 @@ func (e *ActionTriggered) ActionID() ActionID {
 
 func (e *ActionTriggered) SetStatus(status ActionTriggeredStatus) {
 	e.status = status
+}
+func (e *ActionTriggered) AppendTrackingEvent(eventSlug vo.Slug, trackingData vo.CustomAttributes) {
+	e.trackingData[eventSlug] = trackingData
 }
