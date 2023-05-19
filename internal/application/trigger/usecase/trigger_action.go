@@ -40,10 +40,10 @@ func (uc *TriggerActionUsecase) TriggerAction(ctx context.Context, command comma
 	if err != nil {
 		return err
 	}
-	customerID := model.NewCustomerID(command.CustomerID)
-	workspaceID := model.NewWorkspaceID(command.WorkspaceID)
-	campaignID := model.NewCampaignID(command.CampaignID)
-	actionID := model.NewActionID(command.ActionID)
+	customerID := model.CustomerID(command.CustomerID)
+	workspaceID := model.WorkspaceID(command.WorkspaceID)
+	campaignID := model.CampaignID(command.CampaignID)
+	actionID := model.ActionID(command.ActionID)
 	customer, err := uc.customerRepo.GetByID(ctx, customerID, workspaceID)
 	if err != nil {
 		return err

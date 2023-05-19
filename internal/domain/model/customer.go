@@ -12,10 +12,6 @@ var AggregateTypeCustomer = domain.AggregateType("customer")
 
 type CustomerID string
 
-func NewCustomerID(customerID string) CustomerID {
-	return CustomerID(customerID)
-}
-
 type SerializedCustomer struct {
 	Attributes vo.CustomAttributes
 	Events     map[vo.Slug]vo.CustomAttributes
@@ -156,6 +152,8 @@ func (e *Customer) TriggerAction(action Action) (err error) {
 	if err != nil {
 		return err
 	}
+
+	e.actionsTriggered[action.campaignID][action.actionID] = *actionTriggered
 
 	e.AggregateRoot.AppendEvent(event.ActionTrigged{
 		DomainEventBase: domain.NewDomainEventBase(domain.NewDomainEventBaseInput{

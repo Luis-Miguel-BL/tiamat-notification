@@ -31,8 +31,8 @@ func (uc *TriggeredActionTrackingUsecase) TriggeredActionTracking(ctx context.Co
 	if err != nil {
 		return err
 	}
-	workspaceID := model.NewWorkspaceID(command.WorkspaceID)
-	actionTriggeredID := model.NewActionTriggeredID(command.ActionTriggeredID)
+	workspaceID := model.WorkspaceID(command.WorkspaceID)
+	actionTriggeredID := model.ActionTriggeredID(command.ActionTriggeredID)
 	eventSlug, err := vo.NewSlug(command.EventSlug)
 	if err != nil {
 		return err

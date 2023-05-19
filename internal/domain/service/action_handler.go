@@ -58,7 +58,7 @@ func (s *actionHandlerService) HandleAction(ctx context.Context, customer *model
 func matchFilters(campaignFilters []model.Segment, customer *model.Customer) (isMatchAll bool, err error) {
 	isMatchAll = true
 	for _, segment := range campaignFilters {
-		for _, condition := range segment.Conditions {
+		for _, condition := range segment.Conditions() {
 			if !condition.IsMatch(customer.Serialize()) {
 				return false, nil
 			}
@@ -68,7 +68,7 @@ func matchFilters(campaignFilters []model.Segment, customer *model.Customer) (is
 			model.NewSatisfiedSegmentInput{
 				CustomerID:  customer.CustomerID(),
 				WorkspaceID: customer.WorkspaceID(),
-				SegmentID:   segment.SegmentID,
+				SegmentID:   segment.SegmentID(),
 			},
 		)
 		if err != nil {

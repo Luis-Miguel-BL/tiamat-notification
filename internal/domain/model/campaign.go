@@ -11,10 +11,6 @@ var AggregateTypeCampaign = domain.AggregateType("campaign")
 
 type CampaignID string
 
-func NewCampaignID(campaignID string) CampaignID {
-	return CampaignID(campaignID)
-}
-
 type Campaign struct {
 	*domain.AggregateRoot
 	campaignID         CampaignID

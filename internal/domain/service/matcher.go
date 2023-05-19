@@ -19,7 +19,7 @@ func NewMatcherService(repo repository.CustomerRepository) MatcherService {
 }
 
 func (s *matcherService) MatchCustomerWithSegment(ctx context.Context, customer *model.Customer, segment model.Segment) (isMatch bool) {
-	for _, condition := range segment.Conditions {
+	for _, condition := range segment.Conditions() {
 		if !condition.IsMatch(customer.Serialize()) {
 			return false
 		}

@@ -8,10 +8,6 @@ import (
 
 type ActionID string
 
-func NewActionID(actionID string) ActionID {
-	return ActionID(actionID)
-}
-
 type ActionType string
 
 const (

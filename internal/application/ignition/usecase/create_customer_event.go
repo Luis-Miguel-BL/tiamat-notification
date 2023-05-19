@@ -24,8 +24,8 @@ func (uc *CreateCustomerEventUsecase) CreateCustomerEvent(ctx context.Context, c
 	if err != nil {
 		return err
 	}
-	customerID := model.NewCustomerID(command.CustomerID)
-	workspaceID := model.NewWorkspaceID(command.WorkspaceID)
+	customerID := model.CustomerID(command.CustomerID)
+	workspaceID := model.WorkspaceID(command.WorkspaceID)
 
 	eventSlug, err := vo.NewSlug(command.Slug)
 	if err != nil {

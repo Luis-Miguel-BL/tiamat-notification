@@ -10,10 +10,6 @@ import (
 
 type ActionTriggeredID string
 
-func NewActionTriggeredID(actionTriggeredID string) ActionTriggeredID {
-	return ActionTriggeredID(actionTriggeredID)
-}
-
 type ActionTriggeredStatus string
 
 const (

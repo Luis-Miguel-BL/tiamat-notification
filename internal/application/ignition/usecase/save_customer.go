@@ -24,8 +24,8 @@ func (uc *SaveCustomerUsecase) SaveCustomer(ctx context.Context, command command
 	if err != nil {
 		return err
 	}
-	customerID := model.NewCustomerID(command.CustomerID)
-	workspaceID := model.NewWorkspaceID(command.WorkspaceID)
+	customerID := model.CustomerID(command.CustomerID)
+	workspaceID := model.WorkspaceID(command.WorkspaceID)
 
 	customerName, err := vo.NewPersonName(command.Name)
 	if err != nil {

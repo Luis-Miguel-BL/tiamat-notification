@@ -7,3 +7,7 @@ type ApplicationError error
 func NewInvalidEmptyParamError(paramName string) ApplicationError {
 	return ApplicationError(fmt.Errorf("param %s cannot be empty", paramName))
 }
+
+func NewInvalidParamError(paramName string) ApplicationError {
+	return ApplicationError(fmt.Errorf("param %s is invalid", paramName))
+}

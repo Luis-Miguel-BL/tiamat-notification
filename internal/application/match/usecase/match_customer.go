@@ -40,8 +40,8 @@ func (uc *MatchCustomerUsecase) MatchCustomer(ctx context.Context, command comma
 	if err != nil {
 		return err
 	}
-	customerID := model.NewCustomerID(command.CustomerID)
-	workspaceID := model.NewWorkspaceID(command.WorkspaceID)
+	customerID := model.CustomerID(command.CustomerID)
+	workspaceID := model.WorkspaceID(command.WorkspaceID)
 	customer, err := uc.customerRepo.GetByID(ctx, customerID, workspaceID)
 	if err != nil {
 		return err

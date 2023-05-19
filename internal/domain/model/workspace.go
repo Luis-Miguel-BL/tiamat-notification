@@ -5,32 +5,39 @@ import (
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/util"
 )
 
 var AggregateTypeWorkspace = domain.AggregateType("workspace")
 
 type WorkspaceID string
 
-func NewWorkspaceID(workspaceID string) WorkspaceID {
-	return WorkspaceID(workspaceID)
-}
-
 type Workspace struct {
 	*domain.AggregateRoot
-	WorkspaceID WorkspaceID
-	Slug        vo.Slug
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	workspaceID WorkspaceID
+	slug        vo.Slug
+	createdAt   time.Time
+	updatedAt   time.Time
 }
 
-func NewWorkspace(workspaceID string, slug string) (workspace *Workspace, err domain.DomainError) {
-	if workspaceID == "" {
-		return workspace, domain.NewInvalidEmptyParamError("WorkspaceID")
-	}
+func NewWorkspace(slug vo.Slug) (workspace *Workspace, err domain.DomainError) {
+	workspaceID := WorkspaceID(util.NewUUID())
 	return &Workspace{
-		WorkspaceID: WorkspaceID(workspaceID),
-		Slug:        vo.Slug(slug),
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		AggregateRoot: domain.NewAggregateRoot(AggregateTypeWorkspace, domain.AggregateID(workspaceID)),
+		workspaceID:   workspaceID,
+		slug:          slug,
+		createdAt:     time.Now(),
+		updatedAt:     time.Now(),
 	}, nil
+}
+
+func (e *Workspace) WorkspaceID() WorkspaceID {
+	return e.workspaceID
+}
+func (e *Workspace) Slug() vo.Slug {
+	return e.slug
+}
+func (e *Workspace) SetSlug(slug vo.Slug) {
+	e.updatedAt = time.Now()
+	e.slug = slug
 }
