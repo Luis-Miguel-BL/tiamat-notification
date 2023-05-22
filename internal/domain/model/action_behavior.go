@@ -7,10 +7,22 @@ const (
 	BehaviorTypeSendSMS      BehaviorType = "send-sms"
 	BehaviorTypeSendWhatsapp BehaviorType = "send-whatsapp"
 	BehaviorTypeWaitFor      BehaviorType = "wait-for"
+	BehaviorTypeWaitUntil    BehaviorType = "wait-until"
 	BehaviorTypeIfAttribute  BehaviorType = "if-attribute"
 	BehaviorTypeRandom       BehaviorType = "random"
 	BehaviorTypeSplit        BehaviorType = "split"
 )
+
+var AvailableBehaviorType map[BehaviorType]struct{} = map[BehaviorType]struct{}{
+	BehaviorTypeSendEmail:    {},
+	BehaviorTypeSendSMS:      {},
+	BehaviorTypeSendWhatsapp: {},
+	BehaviorTypeWaitFor:      {},
+	BehaviorTypeWaitUntil:    {},
+	BehaviorTypeIfAttribute:  {},
+	BehaviorTypeRandom:       {},
+	BehaviorTypeSplit:        {},
+}
 
 type ActionBehavior struct {
 	Type         BehaviorType

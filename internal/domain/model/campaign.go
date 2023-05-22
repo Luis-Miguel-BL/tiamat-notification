@@ -5,6 +5,7 @@ import (
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/util"
 )
 
 var AggregateTypeCampaign = domain.AggregateType("campaign")
@@ -13,17 +14,60 @@ type CampaignID string
 
 type Campaign struct {
 	*domain.AggregateRoot
-	campaignID         CampaignID
-	slug               vo.Slug
-	sendToUnsubscribed bool
-	isActive           bool
-	firstActionID      ActionID
-	retriggerDelay     time.Duration
-	actions            map[ActionID]Action
-	triggers           []SegmentID
-	filters            []SegmentID
-	createdAt          time.Time
-	updatedAt          time.Time
+	campaignID     CampaignID
+	workspaceID    WorkspaceID
+	slug           vo.Slug
+	isActive       bool
+	retriggerDelay time.Duration
+	actions        map[ActionID]Action
+	firstActionID  ActionID
+	triggers       []SegmentID
+	filters        []SegmentID
+	createdAt      time.Time
+	updatedAt      time.Time
+}
+
+type NewCampaignInput struct {
+	WorkspaceID    WorkspaceID
+	Slug           vo.Slug
+	RetriggerDelay time.Duration
+	Actions        map[ActionID]Action
+	FirstActionID  ActionID
+	Triggers       []SegmentID
+	Filters        []SegmentID
+}
+
+func NewCampaign(input NewCampaignInput) (segment *Campaign, err domain.DomainError) {
+	campaignID := CampaignID(util.NewUUID())
+	if input.WorkspaceID == "" {
+		return segment, domain.NewInvalidEmptyParamError("WorkspaceID")
+	}
+	if input.Slug == "" {
+		return segment, domain.NewInvalidEmptyParamError("Slug")
+	}
+	if len(input.Actions) == 0 {
+		return segment, domain.NewInvalidEmptyParamError("Actions")
+	}
+	if input.FirstActionID == "" {
+		return segment, domain.NewInvalidEmptyParamError("FirstActionID")
+	}
+	if len(input.Triggers) == 0 {
+		return segment, domain.NewInvalidEmptyParamError("Triggers")
+	}
+	return &Campaign{
+		AggregateRoot:  domain.NewAggregateRoot(AggregateTypeCampaign, domain.AggregateID(campaignID)),
+		campaignID:     campaignID,
+		workspaceID:    input.WorkspaceID,
+		slug:           input.Slug,
+		actions:        input.Actions,
+		firstActionID:  input.FirstActionID,
+		retriggerDelay: input.RetriggerDelay,
+		triggers:       input.Triggers,
+		filters:        input.Filters,
+		isActive:       true,
+		createdAt:      time.Now(),
+		updatedAt:      time.Now(),
+	}, nil
 }
 
 func (e *Campaign) CampaignID() CampaignID {
@@ -62,22 +106,3 @@ func (e *Campaign) MustBeTriggered(lastTriggeredDate time.Time) bool {
 	}
 	return false
 }
-
-// func NewCampaign(workspaceID string, Slug string) (customer *Campaign) {
-// 	return &Campaign{
-// 		CampaignID: vo.ID(workspaceID),
-// 		Slug:      vo.Slug(Slug),
-// 		CreatedAt: time.Now(),
-// 		UpdatedAt: time.Now(),
-// 	}
-// }
-
-// func (e *Campaign) Validate() error {
-// 	if err := e.CampaignID.Validate(); err != nil {
-// 		return err
-// 	}
-// 	if err := e.Slug.Validate(); err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }

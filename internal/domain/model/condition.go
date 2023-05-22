@@ -4,7 +4,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/application"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"
 )
@@ -79,12 +78,12 @@ func NewCondition(input NewConditionInput) (condition Condition, err domain.Doma
 
 	isMissingEventSlug := condition.Target == ConditionTargetEvent && input.EventSlug == ""
 	if isMissingEventSlug {
-		return condition, application.NewInvalidEmptyParamError("event_slug")
+		return condition, domain.NewInvalidEmptyParamError("event_slug")
 	}
 
 	isMissingAttrKey := condition.ConditionType != SegmentConditionTypeHasBeenPerformed && input.AttributeKey == ""
 	if isMissingAttrKey {
-		return condition, application.NewInvalidEmptyParamError("attribute_key")
+		return condition, domain.NewInvalidEmptyParamError("attribute_key")
 	}
 
 	availablesAttrValueKind := ConditionAvailableAttrKind[condition.ConditionType]
@@ -97,7 +96,7 @@ func NewCondition(input NewConditionInput) (condition Condition, err domain.Doma
 		}
 	}
 	if !isAvailableAttrKind {
-		return condition, application.NewInvalidParamError("attribute_value")
+		return condition, domain.NewInvalidParamError("attribute_value")
 	}
 	condition.EventSlug = input.EventSlug
 	condition.AttributeKey = input.AttributeKey

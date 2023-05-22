@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/event"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/repository"
 )
@@ -25,17 +27,30 @@ func (s *matcherService) MatchCustomerWithSegment(ctx context.Context, customer 
 		}
 	}
 
-	satisfiedSegment, err := model.NewSatisfiedSegment(
-		model.NewSatisfiedSegmentInput{
+	satisfiedSegment, err := model.NewCustomerSegment(
+		model.NewCustomerSegmentInput{
 			CustomerID:  customer.CustomerID(),
 			WorkspaceID: customer.WorkspaceID(),
-			SegmentID:   segment.SegmentID,
+			SegmentID:   segment.SegmentID(),
 		},
 	)
 	if err != nil {
 		return false
 	}
-	customer.AppendSatisfiedSegment(*satisfiedSegment)
+	customer.AppendCustomerSegment(*satisfiedSegment)
+
+	customer.AggregateRoot.AppendEvent(event.CustomerMatched{
+		DomainEventBase: domain.NewDomainEventBase(domain.NewDomainEventBaseInput{
+			EventType:     event.CustomerEventOccurredEventType,
+			OccurredAt:    satisfiedSegment.MatchedAt(),
+			AggregateType: customer.AggregateType(),
+			AggregateID:   customer.AggregateID(),
+		}),
+		CustomerID:  string(customer.CustomerID()),
+		WorkspaceID: string(customer.WorkspaceID()),
+		SegmentID:   string(satisfiedSegment.SegmentID()),
+		MatchedAt:   satisfiedSegment.MatchedAt(),
+	})
 
 	return true
 }

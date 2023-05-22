@@ -49,3 +49,13 @@ func (e *Segment) SegmentID() SegmentID {
 func (e *Segment) Conditions() []Condition {
 	return e.conditions
 }
+
+func (e *Segment) SetSlug(slug vo.Slug) {
+	e.slug = slug
+	e.updatedAt = time.Now()
+}
+
+func (e *Segment) SetConditions(conditions []Condition) {
+	e.conditions = conditions
+	e.updatedAt = time.Now()
+}

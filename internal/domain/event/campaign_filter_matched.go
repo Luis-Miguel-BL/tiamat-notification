@@ -14,6 +14,6 @@ type CampaignFilterMatched struct {
 	WorkspaceID       string
 	CampaignID        string
 	ActionID          string
-	ActionTriggeredID string
+	CustomerJourneyID string
 	TriggeredAt       time.Time
 }
