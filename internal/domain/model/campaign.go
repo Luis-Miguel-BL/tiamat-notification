@@ -31,8 +31,6 @@ type NewCampaignInput struct {
 	WorkspaceID    WorkspaceID
 	Slug           vo.Slug
 	RetriggerDelay time.Duration
-	Actions        map[ActionID]Action
-	FirstActionID  ActionID
 	Triggers       []SegmentID
 	Filters        []SegmentID
 }
@@ -45,12 +43,6 @@ func NewCampaign(input NewCampaignInput) (segment *Campaign, err domain.DomainEr
 	if input.Slug == "" {
 		return segment, domain.NewInvalidEmptyParamError("Slug")
 	}
-	if len(input.Actions) == 0 {
-		return segment, domain.NewInvalidEmptyParamError("Actions")
-	}
-	if input.FirstActionID == "" {
-		return segment, domain.NewInvalidEmptyParamError("FirstActionID")
-	}
 	if len(input.Triggers) == 0 {
 		return segment, domain.NewInvalidEmptyParamError("Triggers")
 	}
@@ -59,8 +51,6 @@ func NewCampaign(input NewCampaignInput) (segment *Campaign, err domain.DomainEr
 		campaignID:     campaignID,
 		workspaceID:    input.WorkspaceID,
 		slug:           input.Slug,
-		actions:        input.Actions,
-		firstActionID:  input.FirstActionID,
 		retriggerDelay: input.RetriggerDelay,
 		triggers:       input.Triggers,
 		filters:        input.Filters,
@@ -74,14 +64,30 @@ func (e *Campaign) CampaignID() CampaignID {
 	return e.campaignID
 }
 
+func (e *Campaign) SetSlug(slug vo.Slug) {
+	e.slug = slug
+	e.updatedAt = time.Now()
+}
 func (e *Campaign) Triggers() []SegmentID {
 	return e.triggers
+}
+func (e *Campaign) SetTriggers(triggers []SegmentID) {
+	e.triggers = triggers
+	e.updatedAt = time.Now()
 }
 func (e *Campaign) Filters() []SegmentID {
 	return e.filters
 }
+func (e *Campaign) SetFilters(filters []SegmentID) {
+	e.filters = filters
+	e.updatedAt = time.Now()
+}
 func (e *Campaign) RetriggerDelay() time.Duration {
 	return e.retriggerDelay
+}
+func (e *Campaign) SetRetriggerDelay(retriggerDelay time.Duration) {
+	e.retriggerDelay = retriggerDelay
+	e.updatedAt = time.Now()
 }
 func (e *Campaign) FirstActionID() ActionID {
 	return e.firstActionID
@@ -105,4 +111,11 @@ func (e *Campaign) MustBeTriggered(lastTriggeredDate time.Time) bool {
 		return true
 	}
 	return false
+}
+func (e *Campaign) SetActions(firstActionID ActionID, actions map[ActionID]Action) {
+	e.firstActionID = firstActionID
+	e.actions = actions
+}
+func (e *Campaign) IsActive() bool {
+	return e.isActive
 }

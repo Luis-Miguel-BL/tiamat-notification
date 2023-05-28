@@ -6,14 +6,15 @@ import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 )
 
-var ActionTriggedType = domain.EventType("action-trigged")
+var StepJourneyFailedTypeType = domain.EventType("step-journey-failed")
 
-type ActionTrigged struct {
+type StepJourneyFailedType struct {
 	*domain.DomainEventBase
 	CustomerID    string
 	WorkspaceID   string
 	CampaignID    string
 	ActionID      string
 	StepJourneyID string
+	Description   string
 	TriggeredAt   time.Time
 }

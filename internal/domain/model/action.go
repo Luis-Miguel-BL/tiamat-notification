@@ -18,30 +18,31 @@ const (
 	ActionTypeFlow         ActionType = "flow"
 )
 
-var AvailableActionType map[ActionType]struct{} = map[ActionType]struct{}{
+var AvailableActionType = map[ActionType]struct{}{
 	ActionTypeNotification: {},
 	ActionTypeDelay:        {},
 	ActionTypeFlow:         {},
 }
 
 type Action struct {
-	actionID     ActionID
-	slug         vo.Slug
-	actionType   ActionType
-	nextActionID ActionID
-	behaviorType BehaviorType
-	behavior     ActionBehavior
-	createdAt    time.Time
-	updatedAt    time.Time
+	actionID      ActionID
+	slug          vo.Slug
+	actionType    ActionType
+	isActive      bool
+	nextActionsID []ActionID
+	behaviorType  BehaviorType
+	behavior      ActionBehavior
+	createdAt     time.Time
+	updatedAt     time.Time
 }
 
 type NewActionInput struct {
-	ActionID     ActionID
-	Slug         vo.Slug
-	ActionType   ActionType
-	NextActionID ActionID
-	BehaviorType BehaviorType
-	Behavior     ActionBehavior
+	ActionID      ActionID
+	Slug          vo.Slug
+	ActionType    ActionType
+	NextActionsID []ActionID
+	BehaviorType  BehaviorType
+	Behavior      ActionBehavior
 }
 
 func NewAction(input NewActionInput) (action Action, err domain.DomainError) {
@@ -62,20 +63,27 @@ func NewAction(input NewActionInput) (action Action, err domain.DomainError) {
 	}
 
 	return Action{
-		actionID:     input.ActionID,
-		slug:         input.Slug,
-		actionType:   input.ActionType,
-		nextActionID: input.NextActionID,
-		behaviorType: input.BehaviorType,
-		behavior:     input.Behavior,
-		createdAt:    time.Now(),
-		updatedAt:    time.Now(),
+		actionID:      input.ActionID,
+		slug:          input.Slug,
+		actionType:    input.ActionType,
+		isActive:      true,
+		nextActionsID: input.NextActionsID,
+		behaviorType:  input.BehaviorType,
+		behavior:      input.Behavior,
+		createdAt:     time.Now(),
+		updatedAt:     time.Now(),
 	}, nil
 }
 
 func (e *Action) ActionID() ActionID {
 	return e.actionID
 }
+func (e *Action) IsActive() bool {
+	return e.isActive
+}
 func (e *Action) BehaviorType() BehaviorType {
 	return e.behaviorType
+}
+func (e *Action) NextActionsID() []ActionID {
+	return e.nextActionsID
 }

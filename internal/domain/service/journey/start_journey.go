@@ -1,4 +1,4 @@
-package service
+package journey
 
 import (
 	"context"
@@ -9,21 +9,14 @@ import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/repository"
 )
 
-type JourneyService interface {
-	StartJourney(ctx context.Context, customer *model.Customer, campaign model.Campaign) (err error)
+type StartJourneyService struct {
 }
 
-type journeyService struct {
-	repo repository.CustomerRepository
+func NewStartJourneyService(repo repository.CustomerRepository) StartJourneyService {
+	return StartJourneyService{}
 }
 
-func NewJourneyService(repo repository.CustomerRepository) JourneyService {
-	return &journeyService{
-		repo: repo,
-	}
-}
-
-func (s *journeyService) StartJourney(ctx context.Context, customer *model.Customer, campaign model.Campaign) (err error) {
+func (s *StartJourneyService) StartJourney(ctx context.Context, customer *model.Customer, campaign model.Campaign) (err error) {
 	lastTriggered, found := customer.GetCampaignJourney(campaign.CampaignID())
 	if found {
 		if !campaign.MustBeTriggered(lastTriggered.TriggeredAt()) {
@@ -34,7 +27,7 @@ func (s *journeyService) StartJourney(ctx context.Context, customer *model.Custo
 	if err != nil {
 		return err
 	}
-	customerJourney, err := model.NewCustomerJourney(model.NewCustomerJourneyInput{
+	stepJourney, err := model.NewStepJourney(model.NewStepJourneyInput{
 		WorkspaceID: customer.WorkspaceID(),
 		CustomerID:  customer.CustomerID(),
 		CampaignID:  campaign.CampaignID(),
@@ -43,7 +36,7 @@ func (s *journeyService) StartJourney(ctx context.Context, customer *model.Custo
 	if err != nil {
 		return err
 	}
-	err = customer.AppendJorney(*customerJourney)
+	err = customer.AppendJourney(*stepJourney)
 	if err != nil {
 		return err
 	}
@@ -51,16 +44,16 @@ func (s *journeyService) StartJourney(ctx context.Context, customer *model.Custo
 	customer.AggregateRoot.AppendEvent(event.ActionTrigged{
 		DomainEventBase: domain.NewDomainEventBase(domain.NewDomainEventBaseInput{
 			EventType:     event.CustomerEventOccurredEventType,
-			OccurredAt:    customerJourney.TriggeredAt(),
+			OccurredAt:    stepJourney.TriggeredAt(),
 			AggregateType: customer.AggregateType(),
 			AggregateID:   customer.AggregateID(),
 		}),
-		CustomerID:        string(customer.CustomerID()),
-		WorkspaceID:       string(customer.WorkspaceID()),
-		CampaignID:        string(campaign.CampaignID()),
-		ActionID:          string(firstAction.ActionID()),
-		CustomerJourneyID: string(customerJourney.CustomerJourneyID()),
-		TriggeredAt:       customerJourney.TriggeredAt(),
+		CustomerID:    string(customer.CustomerID()),
+		WorkspaceID:   string(customer.WorkspaceID()),
+		CampaignID:    string(campaign.CampaignID()),
+		ActionID:      string(firstAction.ActionID()),
+		StepJourneyID: string(stepJourney.StepJourneyID()),
+		TriggeredAt:   stepJourney.TriggeredAt(),
 	})
 
 	return nil

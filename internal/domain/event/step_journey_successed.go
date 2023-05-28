@@ -6,9 +6,9 @@ import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 )
 
-var ActionTriggedType = domain.EventType("action-trigged")
+var StepJourneySuccessedType = domain.EventType("step-journey-successed")
 
-type ActionTrigged struct {
+type StepJourneySuccessed struct {
 	*domain.DomainEventBase
 	CustomerID    string
 	WorkspaceID   string

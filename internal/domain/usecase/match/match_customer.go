@@ -5,7 +5,8 @@ import (
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/repository"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/service"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/service/journey"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/service/matcher"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/usecase/match/command"
 )
 
@@ -13,16 +14,16 @@ type MatchCustomerUsecase struct {
 	customerRepo   repository.CustomerRepository
 	segmentRepo    repository.SegmentRepository
 	campaignRepo   repository.CampaignRepository
-	matcherService service.MatcherService
-	journeyService service.JourneyService
+	matcherService matcher.CustomerMatcherService
+	journeyService journey.StartJourneyService
 }
 
 type NewMatchCustomerUsecaseInput struct {
 	CustomerRepo   repository.CustomerRepository
 	SegmentRepo    repository.SegmentRepository
 	CampaignRepo   repository.CampaignRepository
-	MatcherService service.MatcherService
-	JourneyService service.JourneyService
+	MatcherService matcher.CustomerMatcherService
+	JourneyService journey.StartJourneyService
 }
 
 func NewMatchCustomerUsecase(input NewMatchCustomerUsecaseInput) *MatchCustomerUsecase {
@@ -50,18 +51,21 @@ func (uc *MatchCustomerUsecase) MatchCustomer(ctx context.Context, command comma
 		uc.customerRepo.Save(ctx, customer)
 	}()
 
-	activeCampaigns, err := uc.campaignRepo.FindActiveCampaigns(ctx, workspaceID)
+	campaigns, err := uc.campaignRepo.FindAll(ctx, workspaceID)
 	if err != nil {
 		return err
 	}
 
-	for _, activeCampaign := range activeCampaigns {
-		isMatchWithTheTriggers, err := uc.matchAllSegments(ctx, workspaceID, activeCampaign.Triggers(), &customer)
+	for _, campaign := range campaigns {
+		if !campaign.IsActive() {
+			continue
+		}
+		isMatchWithTheTriggers, err := uc.matchAllSegments(ctx, workspaceID, campaign.Triggers(), &customer)
 		if err != nil {
 			return err
 		}
 		if isMatchWithTheTriggers {
-			err = uc.journeyService.StartJourney(ctx, &customer, activeCampaign)
+			err = uc.journeyService.StartJourney(ctx, &customer, campaign)
 			if err != nil {
 				continue
 			}

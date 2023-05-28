@@ -13,15 +13,17 @@ const (
 	BehaviorTypeSplit        BehaviorType = "split"
 )
 
-var AvailableBehaviorType map[BehaviorType]struct{} = map[BehaviorType]struct{}{
-	BehaviorTypeSendEmail:    {},
-	BehaviorTypeSendSMS:      {},
-	BehaviorTypeSendWhatsapp: {},
-	BehaviorTypeWaitFor:      {},
-	BehaviorTypeWaitUntil:    {},
-	BehaviorTypeIfAttribute:  {},
-	BehaviorTypeRandom:       {},
-	BehaviorTypeSplit:        {},
+type ValidateBehaviorFunc func(ActionBehavior) bool
+
+var AvailableBehaviorType = map[BehaviorType]ValidateBehaviorFunc{
+	BehaviorTypeSendEmail:    validateSendEmail,
+	BehaviorTypeSendSMS:      validateSendSMS,
+	BehaviorTypeSendWhatsapp: validateSendWhatsapp,
+	BehaviorTypeWaitFor:      validateWaitFor,
+	BehaviorTypeWaitUntil:    validateWaitUntil,
+	BehaviorTypeIfAttribute:  validateIfAttribute,
+	BehaviorTypeRandom:       validateRandom,
+	BehaviorTypeSplit:        validateSplit,
 }
 
 type ActionBehavior struct {
@@ -39,23 +41,55 @@ type ActionBehavior struct {
 type IfAttribute struct {
 }
 
+func validateIfAttribute(behavior ActionBehavior) bool {
+	return true
+}
+
 type Random struct {
+}
+
+func validateRandom(behavior ActionBehavior) bool {
+	return true
 }
 
 type SendEmail struct {
 }
 
+func validateSendEmail(behavior ActionBehavior) bool {
+	return true
+}
+
 type SendSMS struct {
+}
+
+func validateSendSMS(behavior ActionBehavior) bool {
+	return true
 }
 
 type SendWhatsApp struct {
 }
 
+func validateSendWhatsapp(behavior ActionBehavior) bool {
+	return true
+}
+
 type Split struct {
+}
+
+func validateSplit(behavior ActionBehavior) bool {
+	return true
 }
 
 type WaitFor struct {
 }
 
+func validateWaitFor(behavior ActionBehavior) bool {
+	return true
+}
+
 type WaitUntil struct {
+}
+
+func validateWaitUntil(behavior ActionBehavior) bool {
+	return true
 }

@@ -32,7 +32,7 @@ func (uc *ActionTrackingUsecase) TriggeredActionTracking(ctx context.Context, co
 		return err
 	}
 	workspaceID := model.WorkspaceID(command.WorkspaceID)
-	customerJourneyID := model.CustomerJourneyID(command.CustomerJourneyID)
+	stepJourneyID := model.StepJourneyID(command.StepJourneyID)
 	eventSlug, err := vo.NewSlug(command.EventSlug)
 	if err != nil {
 		return err
@@ -41,13 +41,13 @@ func (uc *ActionTrackingUsecase) TriggeredActionTracking(ctx context.Context, co
 	if err != nil {
 		return err
 	}
-	customerJourney, err := uc.customerRepo.GetCustomerJourney(ctx, workspaceID, customerJourneyID)
+	stepJourney, err := uc.customerRepo.GetStepJourney(ctx, workspaceID, stepJourneyID)
 	if err != nil {
 		return err
 	}
-	customerJourney.AppendTrackingEvent(eventSlug, trackingData)
+	stepJourney.AppendTrackingEvent(eventSlug, trackingData)
 
-	err = uc.customerRepo.SaveCustomerJourney(ctx, customerJourney)
+	err = uc.customerRepo.SaveStepJourney(ctx, stepJourney)
 	if err != nil {
 		return err
 	}

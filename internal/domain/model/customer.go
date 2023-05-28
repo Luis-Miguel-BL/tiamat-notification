@@ -6,6 +6,7 @@ import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/event"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/util"
 )
 
 var AggregateTypeCustomer = domain.AggregateType("customer")
@@ -21,18 +22,19 @@ type Customer struct {
 	*domain.AggregateRoot
 	customerID       CustomerID
 	workspaceID      WorkspaceID
+	externalID       vo.ExternalID
 	name             vo.PersonName
 	contact          vo.Contact
 	customAttributes vo.CustomAttributes
 	events           map[vo.Slug][]CustomerEvent
-	journeys         map[CampaignID]map[ActionID]CustomerJourney
+	journeys         map[CampaignID]map[ActionID]StepJourney
 	segments         map[SegmentID]CustomerSegment
 	createdAt        time.Time
 	updatedAt        time.Time
 }
 
 type NewCustomerInput struct {
-	CustomerID       CustomerID
+	ExternalID       vo.ExternalID
 	WorkspaceID      WorkspaceID
 	Name             vo.PersonName
 	Contact          vo.Contact
@@ -40,21 +42,23 @@ type NewCustomerInput struct {
 }
 
 func NewCustomer(input NewCustomerInput) (customer *Customer, err domain.DomainError) {
-	if input.CustomerID == "" {
-		return customer, domain.NewInvalidEmptyParamError("CustomerID")
+	customerID := CustomerID(util.NewUUID())
+	if input.ExternalID == "" {
+		input.ExternalID, _ = vo.NewExternalID(util.NewUUID())
 	}
 	if input.WorkspaceID == "" {
 		return customer, domain.NewInvalidEmptyParamError("WorkspaceID")
 	}
 	customer = &Customer{
-		AggregateRoot:    domain.NewAggregateRoot(AggregateTypeCustomer, domain.AggregateID(input.CustomerID)),
-		customerID:       input.CustomerID,
+		AggregateRoot:    domain.NewAggregateRoot(AggregateTypeCustomer, domain.AggregateID(customerID)),
+		customerID:       customerID,
+		externalID:       input.ExternalID,
 		workspaceID:      input.WorkspaceID,
 		name:             input.Name,
 		contact:          input.Contact,
 		customAttributes: input.CustomAttributes,
 		events:           make(map[vo.Slug][]CustomerEvent),
-		journeys:         make(map[CampaignID]map[ActionID]CustomerJourney),
+		journeys:         make(map[CampaignID]map[ActionID]StepJourney),
 		segments:         make(map[SegmentID]CustomerSegment),
 		createdAt:        time.Now(),
 		updatedAt:        time.Now(),
@@ -69,6 +73,7 @@ func NewCustomer(input NewCustomerInput) (customer *Customer, err domain.DomainE
 		}),
 		CustomerID:       string(customer.customerID),
 		WorkspaceID:      string(customer.workspaceID),
+		ExternalID:       customer.externalID,
 		Name:             customer.name,
 		Contact:          customer.contact,
 		CustomAttributes: customer.customAttributes,
@@ -112,30 +117,35 @@ func (e *Customer) GetLastOccurrenceOfEvent(eventSlug vo.Slug) (lastEvent Custom
 	return lastEvent
 }
 
-func (e *Customer) GetJourney(campaignID CampaignID, actionID ActionID) (customerJourney CustomerJourney, found bool) {
+func (e *Customer) GetSegments() map[SegmentID]CustomerSegment {
+	return e.segments
+}
+
+func (e *Customer) GetStepJourney(campaignID CampaignID, actionID ActionID) (stepJourney StepJourney, found bool) {
 	journey, found := e.journeys[campaignID][actionID]
 
 	return journey, found
 }
-func (e *Customer) GetCampaignJourney(campaignID CampaignID) (customerJourney CustomerJourney, found bool) {
+
+func (e *Customer) GetCampaignJourney(campaignID CampaignID) (stepJourney StepJourney, found bool) {
 	actionsTriggered, found := e.journeys[campaignID]
 	if !found {
-		return customerJourney, found
+		return stepJourney, found
 	}
 	for _, action := range actionsTriggered { // get last action triggered
-		if action.TriggeredAt().After(customerJourney.TriggeredAt()) {
-			customerJourney = action
+		if action.TriggeredAt().After(stepJourney.TriggeredAt()) {
+			stepJourney = action
 		}
 	}
-	return customerJourney, found
+	return stepJourney, found
 }
 
 func (e *Customer) AppendCustomerSegment(satisfiedSegment CustomerSegment) {
 	e.segments[satisfiedSegment.SegmentID()] = satisfiedSegment
 }
 
-func (e *Customer) AppendJorney(customerJourney CustomerJourney) (err error) {
-	e.journeys[customerJourney.campaignID][customerJourney.actionID] = customerJourney
+func (e *Customer) AppendJourney(stepJourney StepJourney) (err error) {
+	e.journeys[stepJourney.campaignID][stepJourney.actionID] = stepJourney
 	return nil
 }
 

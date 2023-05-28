@@ -5,7 +5,7 @@ import (
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/repository"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/service"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/service/journey"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/usecase/workflow/command"
 )
 
@@ -13,16 +13,14 @@ type TriggerActionUsecase struct {
 	customerRepo   repository.CustomerRepository
 	segmentRepo    repository.SegmentRepository
 	campaignRepo   repository.CampaignRepository
-	triggerService service.TriggerService
-	matcherService service.MatcherService
+	triggerService journey.TriggerStepJourneyService
 }
 
 type NewTriggerActionUsecaseInput struct {
 	CustomerRepo   repository.CustomerRepository
 	SegmentRepo    repository.SegmentRepository
 	CampaignRepo   repository.CampaignRepository
-	TriggerService service.TriggerService
-	MatcherService service.MatcherService
+	TriggerService journey.TriggerStepJourneyService
 }
 
 func NewTriggerActionUsecase(input NewTriggerActionUsecaseInput) *TriggerActionUsecase {
@@ -31,7 +29,6 @@ func NewTriggerActionUsecase(input NewTriggerActionUsecaseInput) *TriggerActionU
 		segmentRepo:    input.SegmentRepo,
 		campaignRepo:   input.CampaignRepo,
 		triggerService: input.TriggerService,
-		matcherService: input.MatcherService,
 	}
 }
 
@@ -60,26 +57,11 @@ func (uc *TriggerActionUsecase) TriggerAction(ctx context.Context, command comma
 	if err != nil {
 		return err
 	}
-	campaignFilters, err := uc.getAllSegments(ctx, workspaceID, campaign.Filters())
-	if err != nil {
-		return err
-	}
 
-	err = uc.triggerService.TriggerAction(ctx, &customer, action, campaignFilters, campaign.CampaignID())
+	err = uc.triggerService.TriggerStepJourney(ctx, &customer, action, campaign)
 	if err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func (uc *TriggerActionUsecase) getAllSegments(ctx context.Context, workspaceID model.WorkspaceID, segmentIDs []model.SegmentID) (segments []model.Segment, err error) {
-	for _, segmentID := range segmentIDs {
-		segment, err := uc.segmentRepo.GetByID(ctx, segmentID, workspaceID)
-		if err != nil {
-			return segments, err
-		}
-		segments = append(segments, segment)
-	}
-	return segments, nil
 }

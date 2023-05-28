@@ -14,6 +14,7 @@ type CustomerCreatedEvent struct {
 	CustomerID       string
 	WorkspaceID      string
 	Name             vo.PersonName
+	ExternalID       vo.ExternalID
 	Contact          vo.Contact
 	CustomAttributes vo.CustomAttributes
 	CreatedAt        time.Time

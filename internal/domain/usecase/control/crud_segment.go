@@ -97,14 +97,14 @@ func (uc *CrudSegmentUsecase) DeleteSegment(ctx context.Context, command command
 	segmentID := model.SegmentID(command.SegmentID)
 	workspaceID := model.WorkspaceID(command.WorkspaceID)
 
-	activeCampaigns, err := uc.campaignRepo.FindActiveCampaigns(ctx, workspaceID)
+	activeCampaigns, err := uc.campaignRepo.FindAll(ctx, workspaceID)
 	if err != nil {
 		return err
 	}
 
 	for _, campaign := range activeCampaigns {
-		attachedInSomeCampaignFilter := util.Includes[model.SegmentID](campaign.Filters(), segmentID)
-		attachedInSomeCampaignTrigger := util.Includes[model.SegmentID](campaign.Triggers(), segmentID)
+		attachedInSomeCampaignFilter := util.Includes(campaign.Filters(), segmentID)
+		attachedInSomeCampaignTrigger := util.Includes(campaign.Triggers(), segmentID)
 		if attachedInSomeCampaignFilter || attachedInSomeCampaignTrigger {
 			return domain.NewInvalidOperationError("delete-segment", "attached in some campaign")
 		}

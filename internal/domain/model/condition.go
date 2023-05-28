@@ -2,13 +2,10 @@ package model
 
 import (
 	"reflect"
-	"strings"
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"
 )
-
-type ConditionHandler func(SerializedCustomer) bool
 
 type ConditionType string
 
@@ -20,7 +17,6 @@ const (
 	SegmentConditionTypeMoreThan         ConditionType = "more-than"
 )
 
-// var AvailableKind = "sfs"
 var ConditionAvailableAttrKind = map[ConditionType][]reflect.Kind{
 	SegmentConditionTypeContains:         {reflect.String},
 	SegmentConditionTypeEqual:            {reflect.String, reflect.Bool, reflect.Int, reflect.Float64},
@@ -103,114 +99,4 @@ func NewCondition(input NewConditionInput) (condition Condition, err domain.Doma
 	condition.AttributeValue = input.AttributeValue
 
 	return condition, nil
-}
-
-func (e *Condition) IsMatch(customer SerializedCustomer) bool {
-	mapMatchFunc := map[ConditionType]ConditionHandler{
-		SegmentConditionTypeContains:         e.isMatchByContainsCondition,
-		SegmentConditionTypeEqual:            e.isMatchByEqualCondition,
-		SegmentConditionTypeHasBeenPerformed: e.isMatchByHasBeenPerformedCondition,
-		SegmentConditionTypeLessThan:         e.isMatchByLessThanCondition,
-		SegmentConditionTypeMoreThan:         e.isMatchByMoreThanCondition,
-	}
-
-	return mapMatchFunc[e.ConditionType](customer)
-}
-
-func (e *Condition) getCustomerAttributeValue(customer SerializedCustomer) (attributeValue any, find bool) {
-	switch e.Target {
-	case ConditionTargetAttribute:
-		customerAttributeValue, ok := customer.Attributes[e.AttributeKey.String()]
-		if !ok {
-			return attributeValue, false
-		}
-		attributeValue = customerAttributeValue
-	case ConditionTargetEvent:
-		event, ok := customer.Events[e.EventSlug]
-		if !ok {
-			return attributeValue, false
-		}
-		eventAttributeValue, ok := event[e.AttributeKey.String()]
-		if !ok {
-			return attributeValue, false
-		}
-		attributeValue = eventAttributeValue
-	}
-	return attributeValue, true
-}
-
-func (e *Condition) isMatchByContainsCondition(customer SerializedCustomer) (match bool) {
-	attributeValue, ok := e.getCustomerAttributeValue(customer)
-	if !ok {
-		return false
-	}
-	switch value := attributeValue.(type) {
-	case string:
-		match = strings.Contains(value, e.AttributeValue.(string))
-	default:
-		return false
-	}
-	return match
-}
-
-func (e *Condition) isMatchByEqualCondition(customer SerializedCustomer) (match bool) {
-	attributeValue, ok := e.getCustomerAttributeValue(customer)
-	if !ok {
-		return false
-	}
-
-	return attributeValue == e.AttributeValue
-}
-
-func (e *Condition) isMatchByHasBeenPerformedCondition(customer SerializedCustomer) (match bool) {
-	_, match = customer.Events[e.EventSlug]
-	return match
-}
-
-func (e *Condition) isMatchByLessThanCondition(customer SerializedCustomer) (match bool) {
-	attributeValue, ok := e.getCustomerAttributeValue(customer)
-	if !ok {
-		return false
-	}
-	switch value := attributeValue.(type) {
-	case int:
-		match = value < e.AttributeValue.(int)
-	case int16:
-		match = value < e.AttributeValue.(int16)
-	case int32:
-		match = value < e.AttributeValue.(int32)
-	case int64:
-		match = value < e.AttributeValue.(int64)
-	case float32:
-		match = value < e.AttributeValue.(float32)
-	case float64:
-		match = value < e.AttributeValue.(float64)
-	default:
-		return false
-	}
-	return match
-}
-
-func (e *Condition) isMatchByMoreThanCondition(customer SerializedCustomer) (match bool) {
-	attributeValue, ok := e.getCustomerAttributeValue(customer)
-	if !ok {
-		return false
-	}
-	switch value := attributeValue.(type) {
-	case int:
-		match = value > e.AttributeValue.(int)
-	case int16:
-		match = value > e.AttributeValue.(int16)
-	case int32:
-		match = value > e.AttributeValue.(int32)
-	case int64:
-		match = value > e.AttributeValue.(int64)
-	case float32:
-		match = value > e.AttributeValue.(float32)
-	case float64:
-		match = value > e.AttributeValue.(float64)
-	default:
-		return false
-	}
-	return match
 }

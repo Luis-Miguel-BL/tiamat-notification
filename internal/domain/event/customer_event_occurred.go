@@ -12,6 +12,7 @@ type CustomerEventOccurredEvent struct {
 	CustomerID       string
 	WorkspaceID      string
 	CustomerEventID  string
+	ExternalID       vo.ExternalID
 	Slug             vo.Slug
 	CustomAttributes vo.CustomAttributes
 }
