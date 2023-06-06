@@ -1,5 +1,7 @@
 package gateway
 
+import "time"
+
 type SchedulerGateway interface {
-	Scheduler()
+	Scheduler(timestamp time.Time)
 }

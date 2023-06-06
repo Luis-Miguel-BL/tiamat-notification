@@ -15,6 +15,13 @@ type StepJourneySkipped struct {
 	CampaignID    string
 	ActionID      string
 	StepJourneyID string
-	Reason        string
+	Reason        SkippedReason
 	TriggeredAt   time.Time
 }
+
+type SkippedReason string
+
+const (
+	SkippedReasonMatchFilters   SkippedReason = "campaign-filter-matched"
+	SkippedReasonActionDisabled SkippedReason = "action-disabled"
+)

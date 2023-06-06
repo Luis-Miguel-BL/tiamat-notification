@@ -14,17 +14,18 @@ type CampaignID string
 
 type Campaign struct {
 	*domain.AggregateRoot
-	campaignID     CampaignID
-	workspaceID    WorkspaceID
-	slug           vo.Slug
-	isActive       bool
-	retriggerDelay time.Duration
-	actions        map[ActionID]Action
-	firstActionID  ActionID
-	triggers       []SegmentID
-	filters        []SegmentID
-	createdAt      time.Time
-	updatedAt      time.Time
+	campaignID            CampaignID
+	workspaceID           WorkspaceID
+	slug                  vo.Slug
+	isActive              bool
+	retriggerDelay        time.Duration
+	actions               map[ActionID]Action
+	firstActionID         ActionID
+	triggers              []SegmentID
+	filters               []SegmentID
+	notificationTimeRange vo.TimeRange
+	createdAt             time.Time
+	updatedAt             time.Time
 }
 
 type NewCampaignInput struct {
@@ -118,4 +119,10 @@ func (e *Campaign) SetActions(firstActionID ActionID, actions map[ActionID]Actio
 }
 func (e *Campaign) IsActive() bool {
 	return e.isActive
+}
+func (e *Campaign) NextAvailableTimeToTriggerNotification(currentTime time.Time) (alreadyAvailable bool, nextTime time.Time) {
+	if e.notificationTimeRange.IsAvailable(currentTime) {
+		return true, nextTime
+	}
+	return false, e.notificationTimeRange.NextAvailableTime(currentTime)
 }

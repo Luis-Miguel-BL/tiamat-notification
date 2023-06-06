@@ -2,6 +2,7 @@ package journey
 
 import (
 	"context"
+	"time"
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/event"
@@ -42,7 +43,7 @@ func (s *TriggerStepJourneyService) TriggerStepJourney(ctx context.Context, cust
 			CampaignID:      string(stepJourney.CampaignID()),
 			ActionID:        string(stepJourney.ActionID()),
 			StepJourneyID:   string(stepJourney.StepJourneyID()),
-			Reason:          "campaign-filter-matched",
+			Reason:          event.SkippedReasonMatchFilters,
 			TriggeredAt:     stepJourney.TriggeredAt(),
 		})
 		return nil
@@ -58,10 +59,27 @@ func (s *TriggerStepJourneyService) TriggerStepJourney(ctx context.Context, cust
 			CampaignID:      string(stepJourney.CampaignID()),
 			ActionID:        string(stepJourney.ActionID()),
 			StepJourneyID:   string(stepJourney.StepJourneyID()),
-			Reason:          "action-disabled",
+			Reason:          event.SkippedReasonActionDisabled,
 			TriggeredAt:     stepJourney.TriggeredAt(),
 		})
 		return nil
+	}
+
+	isNotificationAction := action.ActionType() == model.ActionTypeNotification
+	isAvailableToSendNotification, nextAvailableTime := campaign.NextAvailableTimeToTriggerNotification(time.Now())
+	if isNotificationAction && !isAvailableToSendNotification {
+		customer.AggregateRoot.AppendEvent(event.StepJourneyScheduled{
+			DomainEventBase: eventBase,
+			CustomerID:      string(customer.CustomerID()),
+			WorkspaceID:     string(customer.WorkspaceID()),
+			CampaignID:      string(stepJourney.CampaignID()),
+			ActionID:        string(stepJourney.ActionID()),
+			StepJourneyID:   string(stepJourney.StepJourneyID()),
+			Reason:          event.ScheduledReasonOutOfNotificationTimeRange,
+			TriggeredAt:     stepJourney.TriggeredAt(),
+		})
+
+		s.gatewayManager.SchedulerGateway.Scheduler(nextAvailableTime)
 	}
 
 	status, nextActionID, err := mapActionHandler[action.BehaviorType()](ctx, s.gatewayManager, customer, action)
@@ -87,6 +105,7 @@ func (s *TriggerStepJourneyService) TriggerStepJourney(ctx context.Context, cust
 			CampaignID:      string(stepJourney.CampaignID()),
 			ActionID:        string(stepJourney.ActionID()),
 			StepJourneyID:   string(stepJourney.StepJourneyID()),
+			Reason:          event.ScheduledReasonScheduledByAction,
 			TriggeredAt:     stepJourney.TriggeredAt(),
 		})
 	case model.StepJourneyStatusFailed:

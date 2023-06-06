@@ -81,6 +81,9 @@ func (e *Action) ActionID() ActionID {
 func (e *Action) IsActive() bool {
 	return e.isActive
 }
+func (e *Action) ActionType() ActionType {
+	return e.actionType
+}
 func (e *Action) BehaviorType() BehaviorType {
 	return e.behaviorType
 }

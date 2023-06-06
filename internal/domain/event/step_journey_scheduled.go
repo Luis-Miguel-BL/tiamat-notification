@@ -15,5 +15,13 @@ type StepJourneyScheduled struct {
 	CampaignID    string
 	ActionID      string
 	StepJourneyID string
+	Reason        ScheduledReason
 	TriggeredAt   time.Time
 }
+
+type ScheduledReason string
+
+const (
+	ScheduledReasonScheduledByAction          ScheduledReason = "scheduled-by-action"
+	ScheduledReasonOutOfNotificationTimeRange ScheduledReason = "out-of-notification-time-range"
+)
