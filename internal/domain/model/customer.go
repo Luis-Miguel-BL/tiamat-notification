@@ -27,7 +27,6 @@ type Customer struct {
 	contact          vo.Contact
 	customAttributes vo.CustomAttributes
 	events           map[vo.Slug][]CustomerEvent
-	journeys         map[CampaignID]map[ActionID]StepJourney
 	segments         map[SegmentID]CustomerSegment
 	createdAt        time.Time
 	updatedAt        time.Time
@@ -58,7 +57,6 @@ func NewCustomer(input NewCustomerInput) (customer *Customer, err domain.DomainE
 		contact:          input.Contact,
 		customAttributes: input.CustomAttributes,
 		events:           make(map[vo.Slug][]CustomerEvent),
-		journeys:         make(map[CampaignID]map[ActionID]StepJourney),
 		segments:         make(map[SegmentID]CustomerSegment),
 		createdAt:        time.Now(),
 		updatedAt:        time.Now(),
@@ -66,7 +64,7 @@ func NewCustomer(input NewCustomerInput) (customer *Customer, err domain.DomainE
 
 	customer.AggregateRoot.AppendEvent(event.CustomerCreatedEvent{
 		DomainEventBase: domain.NewDomainEventBase(domain.NewDomainEventBaseInput{
-			EventType:     event.CustomerEventOccurredEventType,
+			EventType:     event.CustomerCreatedEventType,
 			OccurredAt:    customer.createdAt,
 			AggregateType: customer.AggregateType(),
 			AggregateID:   customer.AggregateID(),
@@ -99,7 +97,7 @@ func (e *Customer) Serialize() (serialized SerializedCustomer) {
 	serialized.Attributes["phone"] = e.contact.Phone.PhoneNumber
 
 	serialized.Events = make(map[vo.Slug]vo.CustomAttributes)
-	for eventSlug, _ := range e.events {
+	for eventSlug := range e.events {
 		lastEvent := e.GetLastOccurrenceOfEvent(eventSlug)
 
 		serialized.Events[eventSlug] = lastEvent.customAttributes
@@ -121,35 +119,6 @@ func (e *Customer) GetSegments() map[SegmentID]CustomerSegment {
 	return e.segments
 }
 
-func (e *Customer) GetStepJourney(campaignID CampaignID, actionID ActionID) (stepJourney StepJourney, found bool) {
-	journey, found := e.journeys[campaignID][actionID]
-
-	return journey, found
-}
-
-func (e *Customer) GetCampaignJourney(campaignID CampaignID) (stepJourney StepJourney, found bool) {
-	actionsTriggered, found := e.journeys[campaignID]
-	if !found {
-		return stepJourney, found
-	}
-	for _, action := range actionsTriggered { // get last action triggered
-		if action.TriggeredAt().After(stepJourney.TriggeredAt()) {
-			stepJourney = action
-		}
-	}
-	return stepJourney, found
-}
-
 func (e *Customer) AppendCustomerSegment(satisfiedSegment CustomerSegment) {
 	e.segments[satisfiedSegment.SegmentID()] = satisfiedSegment
 }
-
-func (e *Customer) AppendJourney(stepJourney StepJourney) (err error) {
-	e.journeys[stepJourney.campaignID][stepJourney.actionID] = stepJourney
-	return nil
-}
-
-// func (e *Customer) GetActionTriggered(campaignID CampaignID, actionID ActionID) (actionTriggered ActionTriggered, found bool) {
-// 	actionTriggered, found = e.actionsTriggered[campaignID][actionID]
-// 	return actionTriggered, found
-// }

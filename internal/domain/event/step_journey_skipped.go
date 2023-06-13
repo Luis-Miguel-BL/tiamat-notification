@@ -6,7 +6,7 @@ import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 )
 
-var StepJourneySkippedType = domain.EventType("step-journey-skipped")
+var StepJourneySkippedEventType = domain.EventType("step-journey-skipped")
 
 type StepJourneySkipped struct {
 	*domain.DomainEventBase
@@ -15,6 +15,7 @@ type StepJourneySkipped struct {
 	CampaignID    string
 	ActionID      string
 	StepJourneyID string
+	JourneyID     string
 	Reason        SkippedReason
 	TriggeredAt   time.Time
 }

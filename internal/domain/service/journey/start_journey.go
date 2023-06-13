@@ -3,8 +3,6 @@ package journey
 import (
 	"context"
 
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/event"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/repository"
 )
@@ -16,45 +14,40 @@ func NewStartJourneyService(repo repository.CustomerRepository) StartJourneyServ
 	return StartJourneyService{}
 }
 
-func (s *StartJourneyService) StartJourney(ctx context.Context, customer *model.Customer, campaign model.Campaign) (err error) {
-	lastTriggered, found := customer.GetCampaignJourney(campaign.CampaignID())
-	if found {
-		if !campaign.MustBeTriggered(lastTriggered.TriggeredAt()) {
-			return nil
+func (s *StartJourneyService) StartJourney(ctx context.Context, customer *model.Customer, campaign model.Campaign, customerJourneys []model.Journey) (journey *model.Journey, err error) {
+	startedJourney, alreadyStarted := alreadyStartedJourney(campaign.CampaignID(), customerJourneys)
+	if alreadyStarted {
+		if !campaign.MustBeTriggered(startedJourney.FinishedAt()) {
+			return journey, nil
 		}
 	}
+
 	firstAction, err := campaign.Action(campaign.FirstActionID())
 	if err != nil {
-		return err
+		return journey, err
 	}
-	stepJourney, err := model.NewStepJourney(model.NewStepJourneyInput{
+	journey, err = model.NewJourney(model.NewJourneyInput{
 		WorkspaceID: customer.WorkspaceID(),
 		CustomerID:  customer.CustomerID(),
 		CampaignID:  campaign.CampaignID(),
-		ActionID:    firstAction.ActionID(),
 	})
 	if err != nil {
-		return err
+		return journey, err
 	}
-	err = customer.AppendJourney(*stepJourney)
+
+	err = journey.AppendNextStepJourney(firstAction.ActionID())
 	if err != nil {
-		return err
+		return journey, err
 	}
 
-	customer.AggregateRoot.AppendEvent(event.ActionTrigged{
-		DomainEventBase: domain.NewDomainEventBase(domain.NewDomainEventBaseInput{
-			EventType:     event.CustomerEventOccurredEventType,
-			OccurredAt:    stepJourney.TriggeredAt(),
-			AggregateType: customer.AggregateType(),
-			AggregateID:   customer.AggregateID(),
-		}),
-		CustomerID:    string(customer.CustomerID()),
-		WorkspaceID:   string(customer.WorkspaceID()),
-		CampaignID:    string(campaign.CampaignID()),
-		ActionID:      string(firstAction.ActionID()),
-		StepJourneyID: string(stepJourney.StepJourneyID()),
-		TriggeredAt:   stepJourney.TriggeredAt(),
-	})
+	return journey, nil
+}
 
-	return nil
+func alreadyStartedJourney(campaignID model.CampaignID, journeys []model.Journey) (journeyStarted model.Journey, alreadyStarted bool) {
+	for _, journey := range journeys {
+		if journey.CampaignID() == campaignID && journey.StartedAt().After(journey.StartedAt()) {
+			return journey, true
+		}
+	}
+	return journeyStarted, false
 }

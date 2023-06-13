@@ -20,105 +20,72 @@ func NewTriggerStepJourneyService(gatewayManager gateway.GatewayManager) Trigger
 	}
 }
 
-func (s *TriggerStepJourneyService) TriggerStepJourney(ctx context.Context, customer *model.Customer, action model.Action, campaign model.Campaign) (err error) {
-	stepJourney, found := customer.GetStepJourney(campaign.CampaignID(), action.ActionID())
+func (s *TriggerStepJourneyService) TriggerStepJourney(ctx context.Context, journey *model.Journey, customer model.Customer, action model.Action, campaign model.Campaign) (err error) {
+	stepJourney, found := journey.StepJourney(action.ActionID())
 	if !found {
-		return domain.NewNotFoundError("customer-journey")
+		return domain.NewNotFoundError("journey-step")
 	}
-	eventBase := domain.NewDomainEventBase(domain.NewDomainEventBaseInput{
-		EventType:     event.CustomerEventOccurredEventType,
-		OccurredAt:    stepJourney.TriggeredAt(),
-		AggregateType: customer.AggregateType(),
-		AggregateID:   customer.AggregateID(),
-	})
 
 	matchFilters := matchFilters(customer, campaign.Filters())
 	if matchFilters {
-		stepJourney.Finish(model.StepJourneySkipped, "")
-
-		customer.AggregateRoot.AppendEvent(event.StepJourneySkipped{
-			DomainEventBase: eventBase,
-			CustomerID:      string(customer.CustomerID()),
-			WorkspaceID:     string(customer.WorkspaceID()),
-			CampaignID:      string(stepJourney.CampaignID()),
-			ActionID:        string(stepJourney.ActionID()),
-			StepJourneyID:   string(stepJourney.StepJourneyID()),
-			Reason:          event.SkippedReasonMatchFilters,
-			TriggeredAt:     stepJourney.TriggeredAt(),
-		})
+		journey.SkippStep(stepJourney, event.SkippedReasonMatchFilters)
 		return nil
 	}
 
 	if !action.IsActive() {
-		stepJourney.Finish(model.StepJourneySkipped, "")
-
-		customer.AggregateRoot.AppendEvent(event.StepJourneySkipped{
-			DomainEventBase: eventBase,
-			CustomerID:      string(customer.CustomerID()),
-			WorkspaceID:     string(customer.WorkspaceID()),
-			CampaignID:      string(stepJourney.CampaignID()),
-			ActionID:        string(stepJourney.ActionID()),
-			StepJourneyID:   string(stepJourney.StepJourneyID()),
-			Reason:          event.SkippedReasonActionDisabled,
-			TriggeredAt:     stepJourney.TriggeredAt(),
-		})
+		journey.SkippStep(stepJourney, event.SkippedReasonActionDisabled)
 		return nil
 	}
 
 	isNotificationAction := action.ActionType() == model.ActionTypeNotification
 	isAvailableToSendNotification, nextAvailableTime := campaign.NextAvailableTimeToTriggerNotification(time.Now())
 	if isNotificationAction && !isAvailableToSendNotification {
-		customer.AggregateRoot.AppendEvent(event.StepJourneyScheduled{
-			DomainEventBase: eventBase,
-			CustomerID:      string(customer.CustomerID()),
-			WorkspaceID:     string(customer.WorkspaceID()),
-			CampaignID:      string(stepJourney.CampaignID()),
-			ActionID:        string(stepJourney.ActionID()),
-			StepJourneyID:   string(stepJourney.StepJourneyID()),
-			Reason:          event.ScheduledReasonOutOfNotificationTimeRange,
-			TriggeredAt:     stepJourney.TriggeredAt(),
+		s.gatewayManager.SchedulerGateway.Scheduler(nextAvailableTime)
+
+		journey.AggregateRoot.AppendEvent(event.StepJourneyScheduled{
+			DomainEventBase: domain.NewDomainEventBase(domain.NewDomainEventBaseInput{
+				EventType:     event.StepJourneyScheduledEventType,
+				OccurredAt:    time.Now(),
+				AggregateType: model.AggregateTypeJourney,
+				AggregateID:   journey.AggregateID(),
+			}),
+			CustomerID:    string(journey.CustomerID()),
+			WorkspaceID:   string(journey.WorkspaceID()),
+			CampaignID:    string(journey.CampaignID()),
+			ActionID:      string(stepJourney.ActionID()),
+			StepJourneyID: string(stepJourney.StepJourneyID()),
+			JourneyID:     string(journey.JourneyID()),
+			Reason:        event.ScheduledReasonOutOfNotificationTimeRange,
+			TriggeredAt:   stepJourney.TriggeredAt(),
 		})
 
-		s.gatewayManager.SchedulerGateway.Scheduler(nextAvailableTime)
 	}
 
 	status, nextActionID, err := mapActionHandler[action.BehaviorType()](ctx, s.gatewayManager, customer, action)
 
-	stepJourney.Finish(status, nextActionID)
-
 	switch status {
 	case model.StepJourneyStatusSuccessed:
-		customer.AggregateRoot.AppendEvent(event.StepJourneySuccessed{
-			DomainEventBase: eventBase,
-			CustomerID:      string(customer.CustomerID()),
-			WorkspaceID:     string(customer.WorkspaceID()),
-			CampaignID:      string(stepJourney.CampaignID()),
-			ActionID:        string(stepJourney.ActionID()),
-			StepJourneyID:   string(stepJourney.StepJourneyID()),
-			TriggeredAt:     stepJourney.TriggeredAt(),
-		})
-	case model.StepJourneyStatusScheduled:
-		customer.AggregateRoot.AppendEvent(event.StepJourneyScheduled{
-			DomainEventBase: eventBase,
-			CustomerID:      string(customer.CustomerID()),
-			WorkspaceID:     string(customer.WorkspaceID()),
-			CampaignID:      string(stepJourney.CampaignID()),
-			ActionID:        string(stepJourney.ActionID()),
-			StepJourneyID:   string(stepJourney.StepJourneyID()),
-			Reason:          event.ScheduledReasonScheduledByAction,
-			TriggeredAt:     stepJourney.TriggeredAt(),
-		})
+		journey.FinishSuccessfully(stepJourney, nextActionID)
 	case model.StepJourneyStatusFailed:
-		customer.AggregateRoot.AppendEvent(event.StepJourneyFailedType{
-			DomainEventBase: eventBase,
-			CustomerID:      string(customer.CustomerID()),
-			WorkspaceID:     string(customer.WorkspaceID()),
-			CampaignID:      string(stepJourney.CampaignID()),
-			ActionID:        string(stepJourney.ActionID()),
-			StepJourneyID:   string(stepJourney.StepJourneyID()),
-			Description:     err.Error(),
-			TriggeredAt:     stepJourney.TriggeredAt(),
+		journey.FinishUnsuccessfully(stepJourney, nextActionID, err.Error())
+	case model.StepJourneyStatusScheduled:
+		journey.AggregateRoot.AppendEvent(event.StepJourneyScheduled{
+			DomainEventBase: domain.NewDomainEventBase(domain.NewDomainEventBaseInput{
+				EventType:     event.StepJourneyScheduledEventType,
+				OccurredAt:    time.Now(),
+				AggregateType: model.AggregateTypeJourney,
+				AggregateID:   journey.AggregateID(),
+			}),
+			CustomerID:    string(journey.CustomerID()),
+			WorkspaceID:   string(journey.WorkspaceID()),
+			CampaignID:    string(journey.CampaignID()),
+			ActionID:      string(stepJourney.ActionID()),
+			StepJourneyID: string(stepJourney.StepJourneyID()),
+			JourneyID:     string(journey.JourneyID()),
+			Reason:        event.ScheduledReasonScheduledByAction,
+			TriggeredAt:   stepJourney.TriggeredAt(),
 		})
+
 	default:
 		return domain.NewInvalidParamError("JourneyStatus")
 	}
@@ -126,7 +93,7 @@ func (s *TriggerStepJourneyService) TriggerStepJourney(ctx context.Context, cust
 	return nil
 }
 
-type Handle func(context.Context, gateway.GatewayManager, *model.Customer, model.Action) (model.StepJourneyStatus, model.ActionID, error)
+type Handle func(context.Context, gateway.GatewayManager, model.Customer, model.Action) (model.StepJourneyStatus, model.ActionID, error)
 
 var mapActionHandler = map[model.BehaviorType]Handle{
 	model.BehaviorTypeSendEmail:    handleSendEmail,
@@ -139,7 +106,7 @@ var mapActionHandler = map[model.BehaviorType]Handle{
 	model.BehaviorTypeSplit:        handleSplit,
 }
 
-func matchFilters(customer *model.Customer, campaignFilters []model.SegmentID) (isMatch bool) {
+func matchFilters(customer model.Customer, campaignFilters []model.SegmentID) (isMatch bool) {
 	customerSegments := customer.GetSegments()
 
 	for _, segmentFilter := range campaignFilters {
@@ -151,33 +118,33 @@ func matchFilters(customer *model.Customer, campaignFilters []model.SegmentID) (
 	return true
 }
 
-func handleIfAttribute(ctx context.Context, gatewayManager gateway.GatewayManager, customer *model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
+func handleIfAttribute(ctx context.Context, gatewayManager gateway.GatewayManager, customer model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
 	return
 }
-func handleRandom(ctx context.Context, gatewayManager gateway.GatewayManager, customer *model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
-	return
-}
-
-func handleSendEmail(ctx context.Context, gatewayManager gateway.GatewayManager, customer *model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
+func handleRandom(ctx context.Context, gatewayManager gateway.GatewayManager, customer model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
 	return
 }
 
-func handleSendSMS(ctx context.Context, gatewayManager gateway.GatewayManager, customer *model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
+func handleSendEmail(ctx context.Context, gatewayManager gateway.GatewayManager, customer model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
 	return
 }
 
-func handleSendWhatsapp(ctx context.Context, gatewayManager gateway.GatewayManager, customer *model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
+func handleSendSMS(ctx context.Context, gatewayManager gateway.GatewayManager, customer model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
 	return
 }
 
-func handleSplit(ctx context.Context, gatewayManager gateway.GatewayManager, customer *model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
+func handleSendWhatsapp(ctx context.Context, gatewayManager gateway.GatewayManager, customer model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
 	return
 }
 
-func handleWaitFor(ctx context.Context, gatewayManager gateway.GatewayManager, customer *model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
+func handleSplit(ctx context.Context, gatewayManager gateway.GatewayManager, customer model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
 	return
 }
 
-func handleWaitUntil(ctx context.Context, gatewayManager gateway.GatewayManager, customer *model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
+func handleWaitFor(ctx context.Context, gatewayManager gateway.GatewayManager, customer model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
+	return
+}
+
+func handleWaitUntil(ctx context.Context, gatewayManager gateway.GatewayManager, customer model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
 	return
 }

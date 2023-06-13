@@ -21,10 +21,8 @@ const (
 )
 
 type StepJourney struct {
+	journeyID     JourneyID
 	stepJourneyID StepJourneyID
-	workspaceID   WorkspaceID
-	customerID    CustomerID
-	campaignID    CampaignID
 	actionID      ActionID
 	nextActionID  ActionID
 	triggeredAt   time.Time
@@ -32,37 +30,24 @@ type StepJourney struct {
 	trackingData  map[vo.Slug]vo.CustomAttributes
 }
 
-type NewStepJourneyInput struct {
-	WorkspaceID WorkspaceID
-	CustomerID  CustomerID
-	CampaignID  CampaignID
-	ActionID    ActionID
+type newStepJourneyInput struct {
+	JourneyID JourneyID
+	ActionID  ActionID
 }
 
-func NewStepJourney(input NewStepJourneyInput) (actionTriggered *StepJourney, err domain.DomainError) {
-	if input.WorkspaceID == "" {
-		return actionTriggered, domain.NewInvalidEmptyParamError("WorkspaceID")
+func newStepJourney(input newStepJourneyInput) (stepJourney *StepJourney, err domain.DomainError) {
+	if input.JourneyID == "" {
+		return stepJourney, domain.NewInvalidEmptyParamError("JourneyID")
 	}
-	if input.CustomerID == "" {
-		return actionTriggered, domain.NewInvalidEmptyParamError("CustomerID")
-	}
-	if input.CampaignID == "" {
-		return actionTriggered, domain.NewInvalidEmptyParamError("CampaignID")
-	}
-	if input.ActionID == "" {
-		return actionTriggered, domain.NewInvalidEmptyParamError("ActionID")
-	}
-	actionTriggered = &StepJourney{
+	stepJourney = &StepJourney{
 		stepJourneyID: StepJourneyID(util.NewUUID()),
-		workspaceID:   input.WorkspaceID,
-		customerID:    input.CustomerID,
-		campaignID:    input.CampaignID,
+		journeyID:     input.JourneyID,
 		actionID:      input.ActionID,
 		triggeredAt:   time.Now(),
 		status:        StepJourneyStatusTriggered,
 	}
 
-	return actionTriggered, nil
+	return stepJourney, nil
 }
 
 func (e *StepJourney) StepJourneyID() StepJourneyID {
@@ -71,8 +56,8 @@ func (e *StepJourney) StepJourneyID() StepJourneyID {
 func (e *StepJourney) TriggeredAt() time.Time {
 	return e.triggeredAt
 }
-func (e *StepJourney) CampaignID() CampaignID {
-	return e.campaignID
+func (e *StepJourney) JourneyID() JourneyID {
+	return e.journeyID
 }
 func (e *StepJourney) ActionID() ActionID {
 	return e.actionID
@@ -81,10 +66,6 @@ func (e *StepJourney) NextActionID() ActionID {
 	return e.nextActionID
 }
 
-func (e *StepJourney) Finish(status StepJourneyStatus, nextActionID ActionID) {
-	e.status = status
-	e.nextActionID = nextActionID
-}
 func (e *StepJourney) AppendTrackingEvent(eventSlug vo.Slug, trackingData vo.CustomAttributes) {
 	e.trackingData[eventSlug] = trackingData
 }

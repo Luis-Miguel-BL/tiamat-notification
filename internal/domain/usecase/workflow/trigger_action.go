@@ -13,6 +13,7 @@ type TriggerActionUsecase struct {
 	customerRepo   repository.CustomerRepository
 	segmentRepo    repository.SegmentRepository
 	campaignRepo   repository.CampaignRepository
+	journeyRepo    repository.JourneyRepository
 	triggerService journey.TriggerStepJourneyService
 }
 
@@ -20,6 +21,7 @@ type NewTriggerActionUsecaseInput struct {
 	CustomerRepo   repository.CustomerRepository
 	SegmentRepo    repository.SegmentRepository
 	CampaignRepo   repository.CampaignRepository
+	JourneyRepo    repository.JourneyRepository
 	TriggerService journey.TriggerStepJourneyService
 }
 
@@ -28,6 +30,7 @@ func NewTriggerActionUsecase(input NewTriggerActionUsecaseInput) *TriggerActionU
 		customerRepo:   input.CustomerRepo,
 		segmentRepo:    input.SegmentRepo,
 		campaignRepo:   input.CampaignRepo,
+		journeyRepo:    input.JourneyRepo,
 		triggerService: input.TriggerService,
 	}
 }
@@ -37,17 +40,23 @@ func (uc *TriggerActionUsecase) TriggerAction(ctx context.Context, command comma
 	if err != nil {
 		return err
 	}
-	customerID := model.CustomerID(command.CustomerID)
 	workspaceID := model.WorkspaceID(command.WorkspaceID)
+	journeyID := model.JourneyID(command.JourneyID)
+	customerID := model.CustomerID(command.CustomerID)
 	campaignID := model.CampaignID(command.CampaignID)
 	actionID := model.ActionID(command.ActionID)
-	customer, err := uc.customerRepo.GetByID(ctx, customerID, workspaceID)
+	journey, err := uc.journeyRepo.GetByID(ctx, journeyID, workspaceID)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		uc.customerRepo.Save(ctx, customer)
+		uc.journeyRepo.Save(ctx, journey)
 	}()
+
+	customer, err := uc.customerRepo.GetByID(ctx, customerID, workspaceID)
+	if err != nil {
+		return err
+	}
 
 	campaign, err := uc.campaignRepo.GetByID(ctx, campaignID, workspaceID)
 	if err != nil {
@@ -58,7 +67,7 @@ func (uc *TriggerActionUsecase) TriggerAction(ctx context.Context, command comma
 		return err
 	}
 
-	err = uc.triggerService.TriggerStepJourney(ctx, &customer, action, campaign)
+	err = uc.triggerService.TriggerStepJourney(ctx, &journey, customer, action, campaign)
 	if err != nil {
 		return err
 	}

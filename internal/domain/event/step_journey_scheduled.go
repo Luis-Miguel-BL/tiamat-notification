@@ -6,7 +6,7 @@ import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 )
 
-var StepJourneyScheduledType = domain.EventType("step-journey-scheduled")
+var StepJourneyScheduledEventType = domain.EventType("step-journey-scheduled")
 
 type StepJourneyScheduled struct {
 	*domain.DomainEventBase
@@ -15,6 +15,7 @@ type StepJourneyScheduled struct {
 	CampaignID    string
 	ActionID      string
 	StepJourneyID string
+	JourneyID     string
 	Reason        ScheduledReason
 	TriggeredAt   time.Time
 }

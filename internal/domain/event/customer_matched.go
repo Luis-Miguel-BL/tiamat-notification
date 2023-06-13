@@ -6,7 +6,7 @@ import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 )
 
-var CustomerMatchedType = domain.EventType("customer-matched")
+var CustomerMatchedEventType = domain.EventType("customer-matched")
 
 type CustomerMatched struct {
 	*domain.DomainEventBase

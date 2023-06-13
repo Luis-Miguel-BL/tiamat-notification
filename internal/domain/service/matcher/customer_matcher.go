@@ -38,7 +38,7 @@ func (s *CustomerMatcherService) MatchCustomerWithSegment(ctx context.Context, c
 
 	customer.AggregateRoot.AppendEvent(event.CustomerMatched{
 		DomainEventBase: domain.NewDomainEventBase(domain.NewDomainEventBaseInput{
-			EventType:     event.CustomerEventOccurredEventType,
+			EventType:     event.CustomerMatchedEventType,
 			OccurredAt:    satisfiedSegment.MatchedAt(),
 			AggregateType: customer.AggregateType(),
 			AggregateID:   customer.AggregateID(),

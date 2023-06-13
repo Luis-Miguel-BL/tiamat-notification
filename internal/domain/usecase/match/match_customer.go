@@ -14,6 +14,7 @@ type MatchCustomerUsecase struct {
 	customerRepo   repository.CustomerRepository
 	segmentRepo    repository.SegmentRepository
 	campaignRepo   repository.CampaignRepository
+	journeyRepo    repository.JourneyRepository
 	matcherService matcher.CustomerMatcherService
 	journeyService journey.StartJourneyService
 }
@@ -22,6 +23,7 @@ type NewMatchCustomerUsecaseInput struct {
 	CustomerRepo   repository.CustomerRepository
 	SegmentRepo    repository.SegmentRepository
 	CampaignRepo   repository.CampaignRepository
+	JourneyRepo    repository.JourneyRepository
 	MatcherService matcher.CustomerMatcherService
 	JourneyService journey.StartJourneyService
 }
@@ -31,6 +33,7 @@ func NewMatchCustomerUsecase(input NewMatchCustomerUsecaseInput) *MatchCustomerU
 		customerRepo:   input.CustomerRepo,
 		segmentRepo:    input.SegmentRepo,
 		campaignRepo:   input.CampaignRepo,
+		journeyRepo:    input.JourneyRepo,
 		matcherService: input.MatcherService,
 		journeyService: input.JourneyService,
 	}
@@ -51,6 +54,11 @@ func (uc *MatchCustomerUsecase) MatchCustomer(ctx context.Context, command comma
 		uc.customerRepo.Save(ctx, customer)
 	}()
 
+	customerJourneys, err := uc.journeyRepo.FindByCustomerID(ctx, customer.WorkspaceID(), customer.CustomerID())
+	if err != nil {
+		return err
+	}
+
 	campaigns, err := uc.campaignRepo.FindAll(ctx, workspaceID)
 	if err != nil {
 		return err
@@ -65,9 +73,14 @@ func (uc *MatchCustomerUsecase) MatchCustomer(ctx context.Context, command comma
 			return err
 		}
 		if isMatchWithTheTriggers {
-			err = uc.journeyService.StartJourney(ctx, &customer, campaign)
+			newJourney, err := uc.journeyService.StartJourney(ctx, &customer, campaign, customerJourneys)
 			if err != nil {
-				continue
+				return err
+			}
+
+			uc.journeyRepo.Save(ctx, *newJourney)
+			if err != nil {
+				return err
 			}
 		}
 
