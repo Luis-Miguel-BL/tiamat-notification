@@ -104,11 +104,11 @@ func (e *Campaign) Action(actionID ActionID) (action Action, err error) {
 	return action, nil
 }
 
-func (e *Campaign) MustBeTriggered(lastTriggeredDate time.Time) bool {
-	if lastTriggeredDate.IsZero() {
-		return true
+func (e *Campaign) MustBeTriggered(lastFinishedJourney time.Time) bool {
+	if lastFinishedJourney.IsZero() {
+		return false
 	}
-	if lastTriggeredDate.Add(e.retriggerDelay).After(time.Now()) {
+	if lastFinishedJourney.Add(e.retriggerDelay).After(time.Now()) {
 		return true
 	}
 	return false
