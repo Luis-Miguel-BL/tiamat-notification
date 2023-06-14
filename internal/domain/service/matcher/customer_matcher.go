@@ -93,12 +93,11 @@ func isMatchByContainsCondition(condition model.Condition, customer model.Serial
 	if !ok {
 		return false
 	}
-	switch value := attributeValue.(type) {
-	case string:
-		match = strings.Contains(value, condition.AttributeValue.(string))
-	default:
+	value, ok := attributeValue.(string)
+	if !ok {
 		return false
 	}
+	match = strings.Contains(value, condition.AttributeValue.(string))
 	return match
 }
 

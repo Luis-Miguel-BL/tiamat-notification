@@ -91,10 +91,10 @@ func (e *Customer) WorkspaceID() WorkspaceID {
 
 func (e *Customer) Serialize() (serialized SerializedCustomer) {
 	serialized.Attributes = e.customAttributes
-	serialized.Attributes["name"] = e.name
+	serialized.Attributes["name"] = e.name.String()
 	serialized.Attributes["first_name"] = e.name.GetFirstName()
-	serialized.Attributes["email"] = e.contact.Email.EmailAddress
-	serialized.Attributes["phone"] = e.contact.Phone.PhoneNumber
+	serialized.Attributes["email"] = e.contact.Email.EmailAddress.String()
+	serialized.Attributes["phone"] = e.contact.Phone.PhoneNumber.String()
 
 	serialized.Events = make(map[vo.Slug]vo.CustomAttributes)
 	for eventSlug := range e.events {
@@ -121,4 +121,33 @@ func (e *Customer) GetSegments() map[SegmentID]CustomerSegment {
 
 func (e *Customer) AppendCustomerSegment(satisfiedSegment CustomerSegment) {
 	e.segments[satisfiedSegment.SegmentID()] = satisfiedSegment
+}
+
+func (e *Customer) AppendCustomerEvent(slug vo.Slug, customAttributes vo.CustomAttributes) (err error) {
+	customerEvent, err := NewCustomerEvent(NewCustomerEventInput{
+		CustomerID:       e.customerID,
+		WorkspaceID:      e.workspaceID,
+		Slug:             slug,
+		CustomAttributes: customAttributes,
+	})
+	if err != nil {
+		return err
+	}
+	e.events[slug] = append(e.events[slug], *customerEvent)
+
+	e.AggregateRoot.AppendEvent(
+		event.CustomerEventOccurredEvent{
+			DomainEventBase: domain.NewDomainEventBase(domain.NewDomainEventBaseInput{
+				EventType:     event.CustomerEventOccurredEventType,
+				OccurredAt:    customerEvent.OccurredAt(),
+				AggregateType: e.AggregateType(),
+				AggregateID:   e.AggregateID(),
+			}),
+			CustomerID:       string(e.customerID),
+			WorkspaceID:      string(e.workspaceID),
+			CustomerEventID:  string(customerEvent.customerEventID),
+			Slug:             customerEvent.Slug(),
+			CustomAttributes: customerEvent.CustomAttributes(),
+		})
+	return nil
 }

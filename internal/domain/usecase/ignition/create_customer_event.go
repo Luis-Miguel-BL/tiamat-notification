@@ -36,17 +36,16 @@ func (uc *CreateCustomerEventUsecase) CreateCustomerEvent(ctx context.Context, c
 		return err
 	}
 
-	customerEventToCreate, err := model.NewCustomerEvent(
-		model.NewCustomerEventInput{
-			Slug:             eventSlug,
-			CustomAttributes: customAttr,
-		},
-	)
+	customer, err := uc.repo.GetByID(ctx, customerID, workspaceID)
+	if err != nil {
+		return err
+	}
+	err = customer.AppendCustomerEvent(eventSlug, customAttr)
 	if err != nil {
 		return err
 	}
 
-	err = uc.repo.CreateCustomerEvent(ctx, customerID, workspaceID, *customerEventToCreate)
+	err = uc.repo.Save(ctx, customer)
 
 	return err
 }

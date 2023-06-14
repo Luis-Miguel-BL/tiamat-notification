@@ -2,7 +2,9 @@ package journey
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/repository"
 )
@@ -15,10 +17,13 @@ func NewStartJourneyService(repo repository.CustomerRepository) StartJourneyServ
 }
 
 func (s *StartJourneyService) StartJourney(ctx context.Context, customer *model.Customer, campaign model.Campaign, customerJourneys []model.Journey) (journey *model.Journey, err error) {
-	startedJourney, alreadyStarted := alreadyStartedJourney(campaign.CampaignID(), customerJourneys)
-	if alreadyStarted {
-		if !campaign.MustBeTriggered(startedJourney.FinishedAt()) {
-			return journey, nil
+	previousJourney, find := findPreviousJourney(campaign.CampaignID(), customerJourneys)
+	if find {
+		if !previousJourney.IsFinished() {
+			return journey, domain.DomainError(fmt.Errorf("journey already started"))
+		}
+		if !campaign.MustBeRetriggered(previousJourney.FinishedAt()) {
+			return journey, domain.DomainError(fmt.Errorf("journey cannot be started yet"))
 		}
 	}
 
@@ -43,11 +48,11 @@ func (s *StartJourneyService) StartJourney(ctx context.Context, customer *model.
 	return journey, nil
 }
 
-func alreadyStartedJourney(campaignID model.CampaignID, journeys []model.Journey) (journeyStarted model.Journey, alreadyStarted bool) {
+func findPreviousJourney(campaignID model.CampaignID, journeys []model.Journey) (previousJourney model.Journey, find bool) {
 	for _, journey := range journeys {
 		if journey.CampaignID() == campaignID && journey.StartedAt().After(journey.StartedAt()) {
 			return journey, true
 		}
 	}
-	return journeyStarted, false
+	return previousJourney, false
 }

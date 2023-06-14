@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/event"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/util"
 )
@@ -16,7 +15,6 @@ func NewCustomerEventID(customerEventID string) CustomerEventID {
 }
 
 type CustomerEvent struct {
-	*domain.AggregateRoot
 	customerEventID  CustomerEventID
 	customerID       CustomerID
 	workspaceID      WorkspaceID
@@ -37,7 +35,6 @@ func NewCustomerEvent(input NewCustomerEventInput) (customerEvent *CustomerEvent
 		return customerEvent, domain.NewInvalidEmptyParamError("Slug")
 	}
 	customerEvent = &CustomerEvent{
-		AggregateRoot:    domain.NewAggregateRoot(AggregateTypeCustomer, domain.AggregateID(input.CustomerID)),
 		customerEventID:  CustomerEventID(util.NewUUID()),
 		customerID:       input.CustomerID,
 		workspaceID:      input.WorkspaceID,
@@ -45,20 +42,6 @@ func NewCustomerEvent(input NewCustomerEventInput) (customerEvent *CustomerEvent
 		customAttributes: input.CustomAttributes,
 		occurredAt:       time.Now(),
 	}
-	customerEvent.AggregateRoot.AppendEvent(
-		event.CustomerEventOccurredEvent{
-			DomainEventBase: domain.NewDomainEventBase(domain.NewDomainEventBaseInput{
-				EventType:     event.CustomerEventOccurredEventType,
-				OccurredAt:    customerEvent.OccurredAt(),
-				AggregateType: customerEvent.AggregateType(),
-				AggregateID:   customerEvent.AggregateID(),
-			}),
-			CustomerID:       string(input.CustomerID),
-			WorkspaceID:      string(input.WorkspaceID),
-			CustomerEventID:  string(customerEvent.customerEventID),
-			Slug:             customerEvent.Slug(),
-			CustomAttributes: customerEvent.CustomAttributes(),
-		})
 
 	return customerEvent, nil
 }

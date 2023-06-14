@@ -104,7 +104,7 @@ func (e *Campaign) Action(actionID ActionID) (action Action, err error) {
 	return action, nil
 }
 
-func (e *Campaign) MustBeTriggered(lastFinishedJourney time.Time) bool {
+func (e *Campaign) MustBeRetriggered(lastFinishedJourney time.Time) bool {
 	if lastFinishedJourney.IsZero() {
 		return false
 	}

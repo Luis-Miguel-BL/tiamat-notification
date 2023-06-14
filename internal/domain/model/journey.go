@@ -64,6 +64,9 @@ func (e *Journey) StartedAt() time.Time {
 func (e *Journey) FinishedAt() time.Time {
 	return e.finishedAt
 }
+func (e *Journey) IsFinished() bool {
+	return !e.finishedAt.IsZero()
+}
 func (e *Journey) CustomerID() CustomerID {
 	return e.customerID
 }
