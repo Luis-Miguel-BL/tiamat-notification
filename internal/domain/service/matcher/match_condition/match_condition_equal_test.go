@@ -9,8 +9,14 @@ import (
 
 func (s *MatchConditionTestSuite) TestIsMatchByEqualCondition() {
 	mockCustomer := s.customerFactory.CreateCustomer(factory.CreateCustomerInput{
-		Name:             "John Doe",
-		CustomAttributes: map[string]any{"age": 20},
+		Name: "John Doe",
+		CustomAttributes: map[string]any{
+			"age": 20,
+			"phoneNumber": []map[string]interface{}{{
+				"type":   "home",
+				"number": "212 555-1234",
+			}},
+		},
 	})
 	mockCustomer.AppendCustomerEvent("order-created", map[string]any{"product": "phone", "price": 200.5})
 
@@ -25,6 +31,12 @@ func (s *MatchConditionTestSuite) TestIsMatchByEqualCondition() {
 	)
 	attributeAgeEqual10Condition := s.conditionFactory.CreateEqualCondition(
 		factory.CreateConditionInput{AttributeKey: "age", AttributeValue: 10},
+	)
+	attributePhoneNumberEqualHomeCondition := s.conditionFactory.CreateEqualCondition(
+		factory.CreateConditionInput{AttributeKey: "phoneNumber[0].type", AttributeValue: "home"},
+	)
+	attributePhoneNumberEqualFaxCondition := s.conditionFactory.CreateEqualCondition(
+		factory.CreateConditionInput{AttributeKey: "phoneNumber[0].type", AttributeValue: "fax"},
 	)
 	eventOrderAttributeProductEqualPhoneCondition := s.conditionFactory.CreateEqualCondition(
 		factory.CreateConditionInput{Target: model.ConditionTargetEvent, EventSlug: "order-created", AttributeKey: "product", AttributeValue: "phone"},
@@ -44,6 +56,8 @@ func (s *MatchConditionTestSuite) TestIsMatchByEqualCondition() {
 		{scenarioName: "test-not-match-condition-with-attribute-name", condition: attributeNameEqualJaneCondition, expectedMatched: false},
 		{scenarioName: "test-match-condition-with-attribute-age", condition: attributeAgeEqual20Condition, expectedMatched: true},
 		{scenarioName: "test-not-match-condition-with-attribute-age", condition: attributeAgeEqual10Condition, expectedMatched: false},
+		{scenarioName: "test-match-condition-with-attribute-phone", condition: attributePhoneNumberEqualHomeCondition, expectedMatched: true},
+		{scenarioName: "test-not-match-condition-with-attribute-phone", condition: attributePhoneNumberEqualFaxCondition, expectedMatched: false},
 		{scenarioName: "test-match-condition-with-event-attribute-product", condition: eventOrderAttributeProductEqualPhoneCondition, expectedMatched: true},
 		{scenarioName: "test-not-match-condition-with-event-attribute-product", condition: eventOrderAttributeProductEqualMouseCondition, expectedMatched: false},
 		{scenarioName: "test-match-condition-with-event-attribute-price", condition: eventOrderAttributePriceEqual200Condition, expectedMatched: true},

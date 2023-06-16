@@ -90,7 +90,7 @@ func (e *Customer) WorkspaceID() WorkspaceID {
 }
 
 func (e *Customer) Serialize() (serialized SerializedCustomer) {
-	serialized.Attributes = e.customAttributes
+	serialized.Attributes = e.customAttributes.Flatten()
 	serialized.Attributes["name"] = e.name.String()
 	serialized.Attributes["first_name"] = e.name.GetFirstName()
 	serialized.Attributes["email"] = e.contact.Email.EmailAddress.String()
@@ -100,7 +100,7 @@ func (e *Customer) Serialize() (serialized SerializedCustomer) {
 	for eventSlug := range e.events {
 		lastEvent := e.GetLastOccurrenceOfEvent(eventSlug)
 
-		serialized.Events[eventSlug] = lastEvent.customAttributes
+		serialized.Events[eventSlug] = lastEvent.customAttributes.Flatten()
 		serialized.Events[eventSlug]["occurred_at"] = lastEvent.OccurredAt()
 	}
 	return serialized
