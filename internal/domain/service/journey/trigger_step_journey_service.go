@@ -8,6 +8,7 @@ import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/event"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/gateway"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/service/journey/handle_action"
 )
 
 type TriggerStepJourneyService struct {
@@ -61,7 +62,7 @@ func (s *TriggerStepJourneyService) TriggerStepJourney(ctx context.Context, jour
 
 	}
 
-	status, nextActionID, err := mapActionHandler[action.BehaviorType()](ctx, s.gatewayManager, customer, action)
+	status, nextActionID, err := handle_action.Handle(ctx, s.gatewayManager, action, customer)
 
 	switch status {
 	case model.StepJourneyStatusSuccessed:
@@ -93,19 +94,6 @@ func (s *TriggerStepJourneyService) TriggerStepJourney(ctx context.Context, jour
 	return nil
 }
 
-type Handle func(context.Context, gateway.GatewayManager, model.Customer, model.Action) (model.StepJourneyStatus, model.ActionID, error)
-
-var mapActionHandler = map[model.BehaviorType]Handle{
-	model.BehaviorTypeSendEmail:    handleSendEmail,
-	model.BehaviorTypeSendSMS:      handleSendSMS,
-	model.BehaviorTypeSendWhatsapp: handleSendWhatsapp,
-	model.BehaviorTypeWaitFor:      handleWaitFor,
-	model.BehaviorTypeWaitUntil:    handleWaitUntil,
-	model.BehaviorTypeIfAttribute:  handleIfAttribute,
-	model.BehaviorTypeRandom:       handleRandom,
-	model.BehaviorTypeSplit:        handleSplit,
-}
-
 func matchFilters(customer model.Customer, campaignFilters []model.SegmentID) (isMatch bool) {
 	customerSegments := customer.GetSegments()
 
@@ -116,35 +104,4 @@ func matchFilters(customer model.Customer, campaignFilters []model.SegmentID) (i
 		}
 	}
 	return true
-}
-
-func handleIfAttribute(ctx context.Context, gatewayManager gateway.GatewayManager, customer model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
-	return
-}
-func handleRandom(ctx context.Context, gatewayManager gateway.GatewayManager, customer model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
-	return
-}
-
-func handleSendEmail(ctx context.Context, gatewayManager gateway.GatewayManager, customer model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
-	return
-}
-
-func handleSendSMS(ctx context.Context, gatewayManager gateway.GatewayManager, customer model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
-	return
-}
-
-func handleSendWhatsapp(ctx context.Context, gatewayManager gateway.GatewayManager, customer model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
-	return
-}
-
-func handleSplit(ctx context.Context, gatewayManager gateway.GatewayManager, customer model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
-	return
-}
-
-func handleWaitFor(ctx context.Context, gatewayManager gateway.GatewayManager, customer model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
-	return
-}
-
-func handleWaitUntil(ctx context.Context, gatewayManager gateway.GatewayManager, customer model.Customer, action model.Action) (status model.StepJourneyStatus, nextActionID model.ActionID, err error) {
-	return
 }

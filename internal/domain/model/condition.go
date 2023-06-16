@@ -83,16 +83,18 @@ func NewCondition(input NewConditionInput) (condition Condition, err domain.Doma
 	}
 
 	availablesAttrValueKind := ConditionAvailableAttrKind[condition.ConditionType]
-	isAvailableAttrKind := false
 
-	attrValueKind := reflect.TypeOf(input.AttributeValue).Kind()
-	for _, availableKind := range availablesAttrValueKind {
-		if attrValueKind == availableKind {
-			isAvailableAttrKind = true
+	if len(availablesAttrValueKind) > 0 {
+		isAvailableAttrKind := false
+		attrValueKind := reflect.TypeOf(input.AttributeValue).Kind()
+		for _, availableKind := range availablesAttrValueKind {
+			if attrValueKind == availableKind {
+				isAvailableAttrKind = true
+			}
 		}
-	}
-	if !isAvailableAttrKind {
-		return condition, domain.NewInvalidParamError("attribute_value")
+		if !isAvailableAttrKind {
+			return condition, domain.NewInvalidParamError("attribute_value")
+		}
 	}
 	condition.EventSlug = input.EventSlug
 	condition.AttributeKey = input.AttributeKey
