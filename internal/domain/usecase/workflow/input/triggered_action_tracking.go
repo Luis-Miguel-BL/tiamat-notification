@@ -1,11 +1,11 @@
-package command
+package input
 
 import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/util"
 )
 
-type TriggeredActionTrackingCommand struct {
+type TriggeredActionTrackingInput struct {
 	WorkspaceID   string         `json:"workspace_id,omitempty"`
 	StepJourneyID string         `json:"customer_journey_id,omitempty"`
 	CampaignID    string         `json:"campaign_id,omitempty"`
@@ -14,7 +14,7 @@ type TriggeredActionTrackingCommand struct {
 	TrackingData  map[string]any `json:"tracking_data,omitempty"`
 }
 
-func (c *TriggeredActionTrackingCommand) Validate() (err error) {
+func (c *TriggeredActionTrackingInput) Validate() (err error) {
 	if util.IsEmpty(c.WorkspaceID) {
 		return domain.NewInvalidEmptyParamError("workspace_id")
 	}

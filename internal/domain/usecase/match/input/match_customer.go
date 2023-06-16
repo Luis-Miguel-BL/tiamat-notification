@@ -1,16 +1,16 @@
-package command
+package input
 
 import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/util"
 )
 
-type MatchCustomerCommand struct {
+type MatchCustomerInput struct {
 	CustomerID  string `json:"customer_id,omitempty"`
 	WorkspaceID string `json:"workspace_id,omitempty"`
 }
 
-func (c *MatchCustomerCommand) Validate() (err error) {
+func (c *MatchCustomerInput) Validate() (err error) {
 	if util.IsEmpty(c.CustomerID) {
 		return domain.NewInvalidEmptyParamError("customer_id")
 	}

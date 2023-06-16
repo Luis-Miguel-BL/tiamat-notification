@@ -6,7 +6,7 @@ import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/repository"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/usecase/control/command"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/usecase/control/input"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/util"
 )
@@ -23,19 +23,19 @@ func NewCrudSegmentUsecase(segmentRepo repository.SegmentRepository, campaignRep
 	}
 }
 
-func (uc *CrudSegmentUsecase) CreateSegment(ctx context.Context, command command.CreateSegmentCommand) (err error) {
-	err = command.Validate()
+func (uc *CrudSegmentUsecase) CreateSegment(ctx context.Context, input input.CreateSegmentInput) (err error) {
+	err = input.Validate()
 	if err != nil {
 		return err
 	}
 
-	segmentSlug, err := vo.NewSlug(command.Slug)
+	segmentSlug, err := vo.NewSlug(input.Slug)
 	if err != nil {
 		return err
 	}
-	workspaceID := model.WorkspaceID(command.WorkspaceID)
+	workspaceID := model.WorkspaceID(input.WorkspaceID)
 
-	segmentConditions, err := parseConditions(command.Conditions)
+	segmentConditions, err := parseConditions(input.Conditions)
 	if err != nil {
 		return err
 	}
@@ -57,18 +57,18 @@ func (uc *CrudSegmentUsecase) CreateSegment(ctx context.Context, command command
 	return nil
 }
 
-func (uc *CrudSegmentUsecase) UpdateSegment(ctx context.Context, command command.UpdateSegmentCommand) (err error) {
-	err = command.Validate()
+func (uc *CrudSegmentUsecase) UpdateSegment(ctx context.Context, input input.UpdateSegmentInput) (err error) {
+	err = input.Validate()
 	if err != nil {
 		return err
 	}
-	segmentID := model.SegmentID(command.SegmentID)
-	workspaceID := model.WorkspaceID(command.WorkspaceID)
-	segmentSlug, err := vo.NewSlug(command.Slug)
+	segmentID := model.SegmentID(input.SegmentID)
+	workspaceID := model.WorkspaceID(input.WorkspaceID)
+	segmentSlug, err := vo.NewSlug(input.Slug)
 	if err != nil {
 		return err
 	}
-	conditions, err := parseConditions(command.Conditions)
+	conditions, err := parseConditions(input.Conditions)
 	if err != nil {
 		return err
 	}
@@ -89,13 +89,13 @@ func (uc *CrudSegmentUsecase) UpdateSegment(ctx context.Context, command command
 	return nil
 }
 
-func (uc *CrudSegmentUsecase) DeleteSegment(ctx context.Context, command command.DeleteSegmentCommand) (err error) {
-	err = command.Validate()
+func (uc *CrudSegmentUsecase) DeleteSegment(ctx context.Context, input input.DeleteSegmentInput) (err error) {
+	err = input.Validate()
 	if err != nil {
 		return err
 	}
-	segmentID := model.SegmentID(command.SegmentID)
-	workspaceID := model.WorkspaceID(command.WorkspaceID)
+	segmentID := model.SegmentID(input.SegmentID)
+	workspaceID := model.WorkspaceID(input.WorkspaceID)
 
 	activeCampaigns, err := uc.campaignRepo.FindAll(ctx, workspaceID)
 	if err != nil {
@@ -118,13 +118,13 @@ func (uc *CrudSegmentUsecase) DeleteSegment(ctx context.Context, command command
 	return nil
 }
 
-func (uc *CrudSegmentUsecase) Get(ctx context.Context, command command.GetSegmentCommand) (segment model.Segment, err error) {
-	err = command.Validate()
+func (uc *CrudSegmentUsecase) Get(ctx context.Context, input input.GetSegmentInput) (segment model.Segment, err error) {
+	err = input.Validate()
 	if err != nil {
 		return segment, err
 	}
-	segmentID := model.SegmentID(command.SegmentID)
-	workspaceID := model.WorkspaceID(command.WorkspaceID)
+	segmentID := model.SegmentID(input.SegmentID)
+	workspaceID := model.WorkspaceID(input.WorkspaceID)
 
 	segment, err = uc.segmentRepo.GetByID(ctx, segmentID, workspaceID)
 	if err != nil {
@@ -134,12 +134,12 @@ func (uc *CrudSegmentUsecase) Get(ctx context.Context, command command.GetSegmen
 	return segment, nil
 }
 
-func (uc *CrudSegmentUsecase) List(ctx context.Context, command command.ListSegmentCommand) (segments []model.Segment, err error) {
-	err = command.Validate()
+func (uc *CrudSegmentUsecase) List(ctx context.Context, input input.ListSegmentInput) (segments []model.Segment, err error) {
+	err = input.Validate()
 	if err != nil {
 		return segments, err
 	}
-	workspaceID := model.WorkspaceID(command.WorkspaceID)
+	workspaceID := model.WorkspaceID(input.WorkspaceID)
 	segments, err = uc.segmentRepo.List(ctx, workspaceID)
 	if err != nil {
 		return segments, err
@@ -148,16 +148,16 @@ func (uc *CrudSegmentUsecase) List(ctx context.Context, command command.ListSegm
 	return segments, nil
 }
 
-func parseConditions(conditions []command.Condition) (modelConditions []model.Condition, err error) {
-	for _, commandCondition := range conditions {
-		eventSlug, _ := vo.NewSlug(commandCondition.EventSlug)
-		attrKey, _ := vo.NewDotNotation(commandCondition.AttributeKey)
+func parseConditions(conditions []input.Condition) (modelConditions []model.Condition, err error) {
+	for _, inputCondition := range conditions {
+		eventSlug, _ := vo.NewSlug(inputCondition.EventSlug)
+		attrKey, _ := vo.NewDotNotation(inputCondition.AttributeKey)
 		modelCondition, err := model.NewCondition(model.NewConditionInput{
-			ConditionTarget: model.ConditionTarget(commandCondition.ConditionTarget),
-			ConditionType:   model.ConditionType(commandCondition.ConditionType),
+			ConditionTarget: model.ConditionTarget(inputCondition.ConditionTarget),
+			ConditionType:   model.ConditionType(inputCondition.ConditionType),
 			EventSlug:       eventSlug,
 			AttributeKey:    attrKey,
-			AttributeValue:  commandCondition.AttributeValue,
+			AttributeValue:  inputCondition.AttributeValue,
 		})
 		if err != nil {
 			return modelConditions, err

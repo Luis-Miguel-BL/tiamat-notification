@@ -6,7 +6,7 @@ import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/repository"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/usecase/control/command"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/usecase/control/input"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"
 )
 
@@ -20,15 +20,15 @@ func NewSaveActionsUsecase(campaignRepo repository.CampaignRepository) *SaveActi
 	}
 }
 
-func (uc *SaveActionsUsecase) SaveActions(ctx context.Context, command command.SaveActionsCommand) (err error) {
-	err = command.Validate()
+func (uc *SaveActionsUsecase) SaveActions(ctx context.Context, input input.SaveActionsInput) (err error) {
+	err = input.Validate()
 	if err != nil {
 		return err
 	}
-	workspaceID := model.WorkspaceID(command.WorkspaceID)
-	campaignID := model.CampaignID(command.CampaignID)
-	firstActionID := model.ActionID(command.FirstActionID)
-	actions, err := parseActions(command.Actions)
+	workspaceID := model.WorkspaceID(input.WorkspaceID)
+	campaignID := model.CampaignID(input.CampaignID)
+	firstActionID := model.ActionID(input.FirstActionID)
+	actions, err := parseActions(input.Actions)
 	if err != nil {
 		return err
 	}
@@ -48,18 +48,18 @@ func (uc *SaveActionsUsecase) SaveActions(ctx context.Context, command command.S
 	return nil
 }
 
-func parseActions(actions []command.Action) (modelActions map[model.ActionID]model.Action, err error) {
-	for _, commandAction := range actions {
-		actionID := model.ActionID(commandAction.ActionID)
-		actionType := model.ActionType(commandAction.ActionType)
-		behaviorType := model.BehaviorType(commandAction.BehaviorType)
-		behavior := commandAction.Behavior
-		slug, err := vo.NewSlug(commandAction.Slug)
+func parseActions(actions []input.Action) (modelActions map[model.ActionID]model.Action, err error) {
+	for _, inputAction := range actions {
+		actionID := model.ActionID(inputAction.ActionID)
+		actionType := model.ActionType(inputAction.ActionType)
+		behaviorType := model.BehaviorType(inputAction.BehaviorType)
+		behavior := inputAction.Behavior
+		slug, err := vo.NewSlug(inputAction.Slug)
 		if err != nil {
 			return modelActions, err
 		}
 		nextActionsID := []model.ActionID{}
-		for _, nextActionID := range commandAction.NextActionsID {
+		for _, nextActionID := range inputAction.NextActionsID {
 			nextActionsID = append(nextActionsID, model.ActionID(nextActionID))
 		}
 
@@ -78,7 +78,7 @@ func parseActions(actions []command.Action) (modelActions map[model.ActionID]mod
 		modelAction, err := model.NewAction(model.NewActionInput{
 			ActionID:      actionID,
 			Slug:          slug,
-			ActionType:    model.ActionType(commandAction.ActionType),
+			ActionType:    model.ActionType(inputAction.ActionType),
 			NextActionsID: nextActionsID,
 			BehaviorType:  behaviorType,
 			Behavior:      behavior,

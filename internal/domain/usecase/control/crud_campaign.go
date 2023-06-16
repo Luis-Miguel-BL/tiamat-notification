@@ -6,7 +6,7 @@ import (
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/repository"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/usecase/control/command"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/usecase/control/input"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"
 )
 
@@ -21,23 +21,23 @@ func NewCrudCampaignUsecase(campaignRepo repository.CampaignRepository) *CrudCam
 	}
 }
 
-func (uc *CrudCampaignUsecase) CreateCampaign(ctx context.Context, command command.CreateCampaignCommand) (err error) {
-	err = command.Validate()
+func (uc *CrudCampaignUsecase) CreateCampaign(ctx context.Context, input input.CreateCampaignInput) (err error) {
+	err = input.Validate()
 	if err != nil {
 		return err
 	}
 
-	campaignSlug, err := vo.NewSlug(command.Slug)
+	campaignSlug, err := vo.NewSlug(input.Slug)
 	if err != nil {
 		return err
 	}
-	workspaceID := model.WorkspaceID(command.WorkspaceID)
-	retriggerDelay := time.Second * time.Duration(command.RetriggerDelayInSeconds)
-	triggers, err := uc.parseSegmentIDs(ctx, command.Triggers, workspaceID)
+	workspaceID := model.WorkspaceID(input.WorkspaceID)
+	retriggerDelay := time.Second * time.Duration(input.RetriggerDelayInSeconds)
+	triggers, err := uc.parseSegmentIDs(ctx, input.Triggers, workspaceID)
 	if err != nil {
 		return err
 	}
-	filters, err := uc.parseSegmentIDs(ctx, command.Filters, workspaceID)
+	filters, err := uc.parseSegmentIDs(ctx, input.Filters, workspaceID)
 	if err != nil {
 		return err
 	}
@@ -61,23 +61,23 @@ func (uc *CrudCampaignUsecase) CreateCampaign(ctx context.Context, command comma
 	return nil
 }
 
-func (uc *CrudCampaignUsecase) UpdateCampaign(ctx context.Context, command command.UpdateCampaignCommand) (err error) {
-	err = command.Validate()
+func (uc *CrudCampaignUsecase) UpdateCampaign(ctx context.Context, input input.UpdateCampaignInput) (err error) {
+	err = input.Validate()
 	if err != nil {
 		return err
 	}
-	campaignSlug, err := vo.NewSlug(command.Slug)
+	campaignSlug, err := vo.NewSlug(input.Slug)
 	if err != nil {
 		return err
 	}
-	campaignID := model.CampaignID(command.CampaignID)
-	workspaceID := model.WorkspaceID(command.WorkspaceID)
-	retriggerDelay := time.Second * time.Duration(command.RetriggerDelayInSeconds)
-	triggers, err := uc.parseSegmentIDs(ctx, command.Triggers, workspaceID)
+	campaignID := model.CampaignID(input.CampaignID)
+	workspaceID := model.WorkspaceID(input.WorkspaceID)
+	retriggerDelay := time.Second * time.Duration(input.RetriggerDelayInSeconds)
+	triggers, err := uc.parseSegmentIDs(ctx, input.Triggers, workspaceID)
 	if err != nil {
 		return err
 	}
-	filters, err := uc.parseSegmentIDs(ctx, command.Filters, workspaceID)
+	filters, err := uc.parseSegmentIDs(ctx, input.Filters, workspaceID)
 	if err != nil {
 		return err
 	}
@@ -99,13 +99,13 @@ func (uc *CrudCampaignUsecase) UpdateCampaign(ctx context.Context, command comma
 	return nil
 }
 
-func (uc *CrudCampaignUsecase) DeleteCampaign(ctx context.Context, command command.DeleteCampaignCommand) (err error) {
-	err = command.Validate()
+func (uc *CrudCampaignUsecase) DeleteCampaign(ctx context.Context, input input.DeleteCampaignInput) (err error) {
+	err = input.Validate()
 	if err != nil {
 		return err
 	}
-	campaignID := model.CampaignID(command.CampaignID)
-	workspaceID := model.WorkspaceID(command.WorkspaceID)
+	campaignID := model.CampaignID(input.CampaignID)
+	workspaceID := model.WorkspaceID(input.WorkspaceID)
 
 	err = uc.campaignRepo.Delete(ctx, campaignID, workspaceID)
 	if err != nil {
@@ -114,13 +114,13 @@ func (uc *CrudCampaignUsecase) DeleteCampaign(ctx context.Context, command comma
 	return nil
 }
 
-func (uc *CrudCampaignUsecase) Get(ctx context.Context, command command.GetCampaignCommand) (campaign model.Campaign, err error) {
-	err = command.Validate()
+func (uc *CrudCampaignUsecase) Get(ctx context.Context, input input.GetCampaignInput) (campaign model.Campaign, err error) {
+	err = input.Validate()
 	if err != nil {
 		return campaign, err
 	}
-	campaignID := model.CampaignID(command.CampaignID)
-	workspaceID := model.WorkspaceID(command.WorkspaceID)
+	campaignID := model.CampaignID(input.CampaignID)
+	workspaceID := model.WorkspaceID(input.WorkspaceID)
 
 	campaign, err = uc.campaignRepo.GetByID(ctx, campaignID, workspaceID)
 	if err != nil {
@@ -130,12 +130,12 @@ func (uc *CrudCampaignUsecase) Get(ctx context.Context, command command.GetCampa
 	return campaign, nil
 }
 
-func (uc *CrudCampaignUsecase) List(ctx context.Context, command command.ListCampaignCommand) (campaigns []model.Campaign, err error) {
-	err = command.Validate()
+func (uc *CrudCampaignUsecase) List(ctx context.Context, input input.ListCampaignInput) (campaigns []model.Campaign, err error) {
+	err = input.Validate()
 	if err != nil {
 		return campaigns, err
 	}
-	workspaceID := model.WorkspaceID(command.WorkspaceID)
+	workspaceID := model.WorkspaceID(input.WorkspaceID)
 	campaigns, err = uc.campaignRepo.FindAll(ctx, workspaceID)
 	if err != nil {
 		return campaigns, err

@@ -1,11 +1,11 @@
-package command
+package input
 
 import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/util"
 )
 
-type CreateSegmentCommand struct {
+type CreateSegmentInput struct {
 	Slug        string      `json:"slug,omitempty"`
 	WorkspaceID string      `json:"workspace_id,omitempty"`
 	Conditions  []Condition `json:"conditions,omitempty"`
@@ -18,7 +18,7 @@ type Condition struct {
 	AttributeValue  any    `json:"attribute_value,omitempty"`
 }
 
-func (c *CreateSegmentCommand) Validate() (err error) {
+func (c *CreateSegmentInput) Validate() (err error) {
 	if util.IsEmpty(c.Slug) {
 		return domain.NewInvalidEmptyParamError("slug")
 	}
@@ -39,14 +39,14 @@ func (c *CreateSegmentCommand) Validate() (err error) {
 	return nil
 }
 
-type UpdateSegmentCommand struct {
+type UpdateSegmentInput struct {
 	SegmentID   string      `json:"segment_id,omitempty"`
 	Slug        string      `json:"slug,omitempty"`
 	WorkspaceID string      `json:"workspace_id,omitempty"`
 	Conditions  []Condition `json:"conditions,omitempty"`
 }
 
-func (c *UpdateSegmentCommand) Validate() (err error) {
+func (c *UpdateSegmentInput) Validate() (err error) {
 	if util.IsEmpty(c.SegmentID) {
 		return domain.NewInvalidEmptyParamError("segment_id")
 	}
@@ -70,12 +70,12 @@ func (c *UpdateSegmentCommand) Validate() (err error) {
 	return nil
 }
 
-type DeleteSegmentCommand struct {
+type DeleteSegmentInput struct {
 	SegmentID   string `json:"segment_id,omitempty"`
 	WorkspaceID string `json:"workspace_id,omitempty"`
 }
 
-func (c *DeleteSegmentCommand) Validate() (err error) {
+func (c *DeleteSegmentInput) Validate() (err error) {
 	if util.IsEmpty(c.SegmentID) {
 		return domain.NewInvalidEmptyParamError("segment_id")
 	}
@@ -85,12 +85,12 @@ func (c *DeleteSegmentCommand) Validate() (err error) {
 	return nil
 }
 
-type GetSegmentCommand struct {
+type GetSegmentInput struct {
 	SegmentID   string `json:"segment_id,omitempty"`
 	WorkspaceID string `json:"workspace_id,omitempty"`
 }
 
-func (c *GetSegmentCommand) Validate() (err error) {
+func (c *GetSegmentInput) Validate() (err error) {
 	if util.IsEmpty(c.SegmentID) {
 		return domain.NewInvalidEmptyParamError("segment_id")
 	}
@@ -100,11 +100,11 @@ func (c *GetSegmentCommand) Validate() (err error) {
 	return nil
 }
 
-type ListSegmentCommand struct {
+type ListSegmentInput struct {
 	WorkspaceID string `json:"workspace_id,omitempty"`
 }
 
-func (c *ListSegmentCommand) Validate() (err error) {
+func (c *ListSegmentInput) Validate() (err error) {
 	if util.IsEmpty(c.WorkspaceID) {
 		return domain.NewInvalidEmptyParamError("workspace_id")
 	}

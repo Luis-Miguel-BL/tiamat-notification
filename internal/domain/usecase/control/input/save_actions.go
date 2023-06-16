@@ -1,4 +1,4 @@
-package command
+package input
 
 import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
@@ -14,14 +14,14 @@ type Action struct {
 	BehaviorType  string
 	Behavior      model.ActionBehavior
 }
-type SaveActionsCommand struct {
+type SaveActionsInput struct {
 	WorkspaceID   string   `json:"workspace_id,omitempty"`
 	CampaignID    string   `json:"campaign_id,omitempty"`
 	Actions       []Action `json:"actions,omitempty"`
 	FirstActionID string   `json:"first_action_ids,omitempty"`
 }
 
-func (c *SaveActionsCommand) Validate() (err error) {
+func (c *SaveActionsInput) Validate() (err error) {
 	if util.IsEmpty(c.WorkspaceID) {
 		return domain.NewInvalidEmptyParamError("workspace_id")
 	}

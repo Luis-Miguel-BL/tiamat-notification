@@ -5,7 +5,7 @@ import (
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/repository"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/usecase/control/command"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/usecase/control/input"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"
 )
 
@@ -19,12 +19,12 @@ func NewCrudWorkspaceUsecase(repo repository.WorkspaceRepository) *CrudWorkspace
 	}
 }
 
-func (uc *CrudWorkspaceUsecase) CreateWorkspace(ctx context.Context, command command.CreateWorkspaceCommand) (err error) {
-	err = command.Validate()
+func (uc *CrudWorkspaceUsecase) CreateWorkspace(ctx context.Context, input input.CreateWorkspaceInput) (err error) {
+	err = input.Validate()
 	if err != nil {
 		return err
 	}
-	workspaceSlug, err := vo.NewSlug(command.Slug)
+	workspaceSlug, err := vo.NewSlug(input.Slug)
 	if err != nil {
 		return err
 	}
@@ -41,13 +41,13 @@ func (uc *CrudWorkspaceUsecase) CreateWorkspace(ctx context.Context, command com
 	return nil
 }
 
-func (uc *CrudWorkspaceUsecase) UpdateWorkspace(ctx context.Context, command command.UpdateWorkspaceCommand) (err error) {
-	err = command.Validate()
+func (uc *CrudWorkspaceUsecase) UpdateWorkspace(ctx context.Context, input input.UpdateWorkspaceInput) (err error) {
+	err = input.Validate()
 	if err != nil {
 		return err
 	}
-	workspaceID := model.WorkspaceID(command.WorkspaceID)
-	workspaceSlug, err := vo.NewSlug(command.Slug)
+	workspaceID := model.WorkspaceID(input.WorkspaceID)
+	workspaceSlug, err := vo.NewSlug(input.Slug)
 	if err != nil {
 		return err
 	}
@@ -66,12 +66,12 @@ func (uc *CrudWorkspaceUsecase) UpdateWorkspace(ctx context.Context, command com
 	return nil
 }
 
-func (uc *CrudWorkspaceUsecase) DeleteWorkspace(ctx context.Context, command command.DeleteWorkspaceCommand) (err error) {
-	err = command.Validate()
+func (uc *CrudWorkspaceUsecase) DeleteWorkspace(ctx context.Context, input input.DeleteWorkspaceInput) (err error) {
+	err = input.Validate()
 	if err != nil {
 		return err
 	}
-	workspaceID := model.WorkspaceID(command.WorkspaceID)
+	workspaceID := model.WorkspaceID(input.WorkspaceID)
 	err = uc.repo.Delete(ctx, workspaceID)
 	if err != nil {
 		return err
@@ -79,12 +79,12 @@ func (uc *CrudWorkspaceUsecase) DeleteWorkspace(ctx context.Context, command com
 	return nil
 }
 
-func (uc *CrudWorkspaceUsecase) Get(ctx context.Context, command command.GetWorkspaceCommand) (workspace model.Workspace, err error) {
-	err = command.Validate()
+func (uc *CrudWorkspaceUsecase) Get(ctx context.Context, input input.GetWorkspaceInput) (workspace model.Workspace, err error) {
+	err = input.Validate()
 	if err != nil {
 		return workspace, err
 	}
-	workspaceID := model.WorkspaceID(command.WorkspaceID)
+	workspaceID := model.WorkspaceID(input.WorkspaceID)
 
 	workspace, err = uc.repo.GetByID(ctx, workspaceID)
 	if err != nil {

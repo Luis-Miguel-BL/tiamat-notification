@@ -6,7 +6,7 @@ import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/repository"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/service/journey"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/usecase/workflow/command"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/usecase/workflow/input"
 )
 
 type TriggerActionUsecase struct {
@@ -35,16 +35,16 @@ func NewTriggerActionUsecase(input NewTriggerActionUsecaseInput) *TriggerActionU
 	}
 }
 
-func (uc *TriggerActionUsecase) TriggerAction(ctx context.Context, command command.TriggerActionCommand) (err error) {
-	err = command.Validate()
+func (uc *TriggerActionUsecase) TriggerAction(ctx context.Context, input input.TriggerActionInput) (err error) {
+	err = input.Validate()
 	if err != nil {
 		return err
 	}
-	workspaceID := model.WorkspaceID(command.WorkspaceID)
-	journeyID := model.JourneyID(command.JourneyID)
-	customerID := model.CustomerID(command.CustomerID)
-	campaignID := model.CampaignID(command.CampaignID)
-	actionID := model.ActionID(command.ActionID)
+	workspaceID := model.WorkspaceID(input.WorkspaceID)
+	journeyID := model.JourneyID(input.JourneyID)
+	customerID := model.CustomerID(input.CustomerID)
+	campaignID := model.CampaignID(input.CampaignID)
+	actionID := model.ActionID(input.ActionID)
 	journey, err := uc.journeyRepo.GetByID(ctx, journeyID, workspaceID)
 	if err != nil {
 		return err

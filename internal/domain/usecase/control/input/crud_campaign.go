@@ -1,11 +1,11 @@
-package command
+package input
 
 import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/util"
 )
 
-type CreateCampaignCommand struct {
+type CreateCampaignInput struct {
 	WorkspaceID             string   `json:"workspace_id,omitempty"`
 	Slug                    string   `json:"slug,omitempty"`
 	RetriggerDelayInSeconds int      `json:"retrigger_delay_in_seconds,omitempty"`
@@ -13,7 +13,7 @@ type CreateCampaignCommand struct {
 	Filters                 []string `json:"filters,omitempty"`
 }
 
-func (c *CreateCampaignCommand) Validate() (err error) {
+func (c *CreateCampaignInput) Validate() (err error) {
 	if util.IsEmpty(c.WorkspaceID) {
 		return domain.NewInvalidEmptyParamError("workspace_id")
 	}
@@ -26,7 +26,7 @@ func (c *CreateCampaignCommand) Validate() (err error) {
 	return nil
 }
 
-type UpdateCampaignCommand struct {
+type UpdateCampaignInput struct {
 	WorkspaceID             string   `json:"workspace_id,omitempty"`
 	CampaignID              string   `json:"campaign_id,omitempty"`
 	Slug                    string   `json:"slug,omitempty"`
@@ -35,7 +35,7 @@ type UpdateCampaignCommand struct {
 	Filters                 []string `json:"filters,omitempty"`
 }
 
-func (c *UpdateCampaignCommand) Validate() (err error) {
+func (c *UpdateCampaignInput) Validate() (err error) {
 	if util.IsEmpty(c.CampaignID) {
 		return domain.NewInvalidEmptyParamError("campaign_id")
 	}
@@ -51,12 +51,12 @@ func (c *UpdateCampaignCommand) Validate() (err error) {
 	return nil
 }
 
-type DeleteCampaignCommand struct {
+type DeleteCampaignInput struct {
 	CampaignID  string `json:"campaign_id,omitempty"`
 	WorkspaceID string `json:"workspace_id,omitempty"`
 }
 
-func (c *DeleteCampaignCommand) Validate() (err error) {
+func (c *DeleteCampaignInput) Validate() (err error) {
 	if util.IsEmpty(c.CampaignID) {
 		return domain.NewInvalidEmptyParamError("campaign_id")
 	}
@@ -66,12 +66,12 @@ func (c *DeleteCampaignCommand) Validate() (err error) {
 	return nil
 }
 
-type GetCampaignCommand struct {
+type GetCampaignInput struct {
 	CampaignID  string `json:"campaign_id,omitempty"`
 	WorkspaceID string `json:"workspace_id,omitempty"`
 }
 
-func (c *GetCampaignCommand) Validate() (err error) {
+func (c *GetCampaignInput) Validate() (err error) {
 	if util.IsEmpty(c.CampaignID) {
 		return domain.NewInvalidEmptyParamError("campaign_id")
 	}
@@ -81,11 +81,11 @@ func (c *GetCampaignCommand) Validate() (err error) {
 	return nil
 }
 
-type ListCampaignCommand struct {
+type ListCampaignInput struct {
 	WorkspaceID string `json:"workspace_id,omitempty"`
 }
 
-func (c *ListCampaignCommand) Validate() (err error) {
+func (c *ListCampaignInput) Validate() (err error) {
 	if util.IsEmpty(c.WorkspaceID) {
 		return domain.NewInvalidEmptyParamError("workspace_id")
 	}

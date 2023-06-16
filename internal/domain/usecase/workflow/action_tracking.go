@@ -5,7 +5,7 @@ import (
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/repository"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/usecase/workflow/command"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/usecase/workflow/input"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"
 )
 
@@ -26,18 +26,18 @@ func NewActionTrackingUsecase(input NewActionTrackingUsecaseInput) *ActionTracki
 	}
 }
 
-func (uc *ActionTrackingUsecase) TriggeredActionTracking(ctx context.Context, command command.TriggeredActionTrackingCommand) (err error) {
-	err = command.Validate()
+func (uc *ActionTrackingUsecase) TriggeredActionTracking(ctx context.Context, input input.TriggeredActionTrackingInput) (err error) {
+	err = input.Validate()
 	if err != nil {
 		return err
 	}
-	workspaceID := model.WorkspaceID(command.WorkspaceID)
-	stepJourneyID := model.StepJourneyID(command.StepJourneyID)
-	eventSlug, err := vo.NewSlug(command.EventSlug)
+	workspaceID := model.WorkspaceID(input.WorkspaceID)
+	stepJourneyID := model.StepJourneyID(input.StepJourneyID)
+	eventSlug, err := vo.NewSlug(input.EventSlug)
 	if err != nil {
 		return err
 	}
-	trackingData, err := vo.NewCustomAttributes(command.TrackingData)
+	trackingData, err := vo.NewCustomAttributes(input.TrackingData)
 	if err != nil {
 		return err
 	}

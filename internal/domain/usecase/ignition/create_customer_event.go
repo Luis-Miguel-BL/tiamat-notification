@@ -5,7 +5,7 @@ import (
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/repository"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/usecase/ignition/command"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/usecase/ignition/input"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"
 )
 
@@ -19,19 +19,19 @@ func NewCreateCustomerEventUsecase(repo repository.CustomerRepository) *CreateCu
 	}
 }
 
-func (uc *CreateCustomerEventUsecase) CreateCustomerEvent(ctx context.Context, command command.CreateCustomerEventCommand) (err error) {
-	err = command.Validate()
+func (uc *CreateCustomerEventUsecase) CreateCustomerEvent(ctx context.Context, input input.CreateCustomerEventInput) (err error) {
+	err = input.Validate()
 	if err != nil {
 		return err
 	}
-	customerID := model.CustomerID(command.CustomerID)
-	workspaceID := model.WorkspaceID(command.WorkspaceID)
+	customerID := model.CustomerID(input.CustomerID)
+	workspaceID := model.WorkspaceID(input.WorkspaceID)
 
-	eventSlug, err := vo.NewSlug(command.Slug)
+	eventSlug, err := vo.NewSlug(input.Slug)
 	if err != nil {
 		return err
 	}
-	customAttr, err := vo.NewCustomAttributes(command.CustomAttributes)
+	customAttr, err := vo.NewCustomAttributes(input.CustomAttributes)
 	if err != nil {
 		return err
 	}

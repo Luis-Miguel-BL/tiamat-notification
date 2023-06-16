@@ -1,11 +1,11 @@
-package command
+package input
 
 import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/util"
 )
 
-type CreateCustomerEventCommand struct {
+type CreateCustomerEventInput struct {
 	CustomerID       string         `json:"customer_id,omitempty"`
 	WorkspaceID      string         `json:"workspace_id,omitempty"`
 	CustomerEventID  string         `json:"customer_event_id,omitempty"`
@@ -13,7 +13,7 @@ type CreateCustomerEventCommand struct {
 	CustomAttributes map[string]any `json:"custom_attributes,omitempty"`
 }
 
-func (c *CreateCustomerEventCommand) Validate() (err error) {
+func (c *CreateCustomerEventInput) Validate() (err error) {
 	if util.IsEmpty(c.CustomerEventID) {
 		c.CustomerEventID = util.NewUUID()
 	}

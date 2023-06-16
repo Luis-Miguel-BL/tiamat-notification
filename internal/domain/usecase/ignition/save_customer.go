@@ -5,7 +5,7 @@ import (
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/repository"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/usecase/ignition/command"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/usecase/ignition/input"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"
 )
 
@@ -19,28 +19,28 @@ func NewSaveCustomerUsecase(repo repository.CustomerRepository) *SaveCustomerUse
 	}
 }
 
-func (uc *SaveCustomerUsecase) SaveCustomer(ctx context.Context, command command.SaveCustomerCommand) (err error) {
-	err = command.Validate()
+func (uc *SaveCustomerUsecase) SaveCustomer(ctx context.Context, input input.SaveCustomerInput) (err error) {
+	err = input.Validate()
 	if err != nil {
 		return err
 	}
-	workspaceID := model.WorkspaceID(command.WorkspaceID)
+	workspaceID := model.WorkspaceID(input.WorkspaceID)
 
-	externalID, err := vo.NewExternalID(command.ExternalID)
+	externalID, err := vo.NewExternalID(input.ExternalID)
 	if err != nil {
 		return err
 	}
-	customerName, err := vo.NewPersonName(command.Name)
-	if err != nil {
-		return err
-	}
-
-	contact, err := vo.NewContact(command.Contact.EmailAddress, command.Contact.PhoneNumber)
+	customerName, err := vo.NewPersonName(input.Name)
 	if err != nil {
 		return err
 	}
 
-	customAttr, err := vo.NewCustomAttributes(command.CustomAttributes)
+	contact, err := vo.NewContact(input.Contact.EmailAddress, input.Contact.PhoneNumber)
+	if err != nil {
+		return err
+	}
+
+	customAttr, err := vo.NewCustomAttributes(input.CustomAttributes)
 	if err != nil {
 		return err
 	}

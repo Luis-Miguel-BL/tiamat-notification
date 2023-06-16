@@ -1,11 +1,11 @@
-package command
+package input
 
 import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/util"
 )
 
-type SaveCustomerCommand struct {
+type SaveCustomerInput struct {
 	CustomerID       string         `json:"customer_id,omitempty"`
 	WorkspaceID      string         `json:"workspace_id,omitempty"`
 	ExternalID       string         `json:"external_id,omitempty"`
@@ -19,7 +19,7 @@ type Contact struct {
 	PhoneNumber  string `json:"phone_number,omitempty"`
 }
 
-func (c *SaveCustomerCommand) Validate() (err error) {
+func (c *SaveCustomerInput) Validate() (err error) {
 	if util.IsEmpty(c.CustomerID) {
 		c.CustomerID = util.NewUUID()
 	}

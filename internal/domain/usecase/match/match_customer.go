@@ -7,7 +7,7 @@ import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/repository"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/service/journey"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/service/matcher"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/usecase/match/command"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/usecase/match/input"
 )
 
 type MatchCustomerUsecase struct {
@@ -39,13 +39,13 @@ func NewMatchCustomerUsecase(input NewMatchCustomerUsecaseInput) *MatchCustomerU
 	}
 }
 
-func (uc *MatchCustomerUsecase) MatchCustomer(ctx context.Context, command command.MatchCustomerCommand) (err error) {
-	err = command.Validate()
+func (uc *MatchCustomerUsecase) MatchCustomer(ctx context.Context, input input.MatchCustomerInput) (err error) {
+	err = input.Validate()
 	if err != nil {
 		return err
 	}
-	customerID := model.CustomerID(command.CustomerID)
-	workspaceID := model.WorkspaceID(command.WorkspaceID)
+	customerID := model.CustomerID(input.CustomerID)
+	workspaceID := model.WorkspaceID(input.WorkspaceID)
 	customer, err := uc.customerRepo.GetByID(ctx, customerID, workspaceID)
 	if err != nil {
 		return err
