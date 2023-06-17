@@ -40,6 +40,12 @@ func NewCustomerSegment(input NewCustomerSegmentInput) (satisfiedSegment *Custom
 func (e *CustomerSegment) SegmentID() SegmentID {
 	return e.segmentID
 }
+func (e *CustomerSegment) CustomerID() CustomerID {
+	return e.customerID
+}
+func (e *CustomerSegment) WorkspaceID() WorkspaceID {
+	return e.workspaceID
+}
 func (e *CustomerSegment) MatchedAt() time.Time {
 	return e.matchedAt
 }

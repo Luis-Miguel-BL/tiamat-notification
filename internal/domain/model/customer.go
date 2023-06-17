@@ -88,6 +88,30 @@ func (e *Customer) CustomerID() CustomerID {
 func (e *Customer) WorkspaceID() WorkspaceID {
 	return e.workspaceID
 }
+func (e *Customer) ExternalID() vo.ExternalID {
+	return e.externalID
+}
+func (e *Customer) Name() vo.PersonName {
+	return e.name
+}
+func (e *Customer) Contact() vo.Contact {
+	return e.contact
+}
+func (e *Customer) CustomAttributes() vo.CustomAttributes {
+	return e.customAttributes
+}
+func (e *Customer) Events() map[vo.Slug][]CustomerEvent {
+	return e.events
+}
+func (e *Customer) Segments() map[SegmentID]CustomerSegment {
+	return e.segments
+}
+func (e *Customer) CreatedAt() time.Time {
+	return e.createdAt
+}
+func (e *Customer) UpdatedAt() time.Time {
+	return e.updatedAt
+}
 
 func (e *Customer) Serialize() (serialized SerializedCustomer) {
 	serialized.Attributes = e.customAttributes.Flatten()
@@ -113,10 +137,6 @@ func (e *Customer) GetLastOccurrenceOfEvent(eventSlug vo.Slug) (lastEvent Custom
 		}
 	}
 	return lastEvent
-}
-
-func (e *Customer) GetSegments() map[SegmentID]CustomerSegment {
-	return e.segments
 }
 
 func (e *Customer) AppendCustomerSegment(satisfiedSegment CustomerSegment) {

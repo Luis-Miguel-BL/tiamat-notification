@@ -46,15 +46,22 @@ func NewCustomerEvent(input NewCustomerEventInput) (customerEvent *CustomerEvent
 	return customerEvent, nil
 }
 
-func (e *CustomerEvent) OccurredAt() time.Time {
-	return e.occurredAt
-}
 func (e *CustomerEvent) CustomerEventID() CustomerEventID {
 	return e.customerEventID
+}
+func (e *CustomerEvent) CustomerID() CustomerID {
+	return e.customerID
+}
+func (e *CustomerEvent) WorkspaceID() WorkspaceID {
+	return e.workspaceID
 }
 func (e *CustomerEvent) Slug() vo.Slug {
 	return e.slug
 }
 func (e *CustomerEvent) CustomAttributes() vo.CustomAttributes {
 	return e.customAttributes
+}
+
+func (e *CustomerEvent) OccurredAt() time.Time {
+	return e.occurredAt
 }

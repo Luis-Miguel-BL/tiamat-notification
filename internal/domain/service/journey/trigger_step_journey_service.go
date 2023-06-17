@@ -95,7 +95,7 @@ func (s *TriggerStepJourneyService) TriggerStepJourney(ctx context.Context, jour
 }
 
 func matchFilters(customer model.Customer, campaignFilters []model.SegmentID) (isMatch bool) {
-	customerSegments := customer.GetSegments()
+	customerSegments := customer.Segments()
 
 	for _, segmentFilter := range campaignFilters {
 		_, isMatch := customerSegments[segmentFilter]
