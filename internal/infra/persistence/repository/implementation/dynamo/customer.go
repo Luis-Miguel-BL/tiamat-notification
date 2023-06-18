@@ -30,11 +30,20 @@ func (r *DynamoCustomerRepo) Save(ctx context.Context, customer model.Customer) 
 	return err
 }
 func (r *DynamoCustomerRepo) GetByID(ctx context.Context, customerID model.CustomerID, workspaceID model.WorkspaceID) (customer model.Customer, err error) {
-	return
-}
-func (r *DynamoCustomerRepo) GetStepJourney(ctx context.Context, workspaceID model.WorkspaceID, stepJourneyID model.StepJourneyID) (stepJourney model.StepJourney, err error) {
-	return
-}
-func (r *DynamoCustomerRepo) SaveStepJourney(ctx context.Context, stepJourney model.StepJourney) (err error) {
-	return
+	dynamoCustomer := dynamo_model.DynamoCustomer{}
+	dynamoResult, count, err := r.client.QueryByPK(
+		ctx,
+		customerTableName,
+		dynamo_model.MakeCustomerPK(string(workspaceID), string(customerID)),
+	)
+	if err != nil {
+		return customer, err
+	}
+	if count == 0 {
+		return customer, NewDynamoNotFoundErr("customer")
+	}
+
+	customer = dynamoCustomer.ToDomain(dynamoResult)
+
+	return customer, nil
 }

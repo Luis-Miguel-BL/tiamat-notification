@@ -10,18 +10,18 @@ import (
 )
 
 type ActionTrackingUsecase struct {
-	customerRepo repository.CustomerRepository
+	journeyRepo  repository.JourneyRepository
 	campaignRepo repository.CampaignRepository
 }
 
 type NewActionTrackingUsecaseInput struct {
-	CustomerRepo repository.CustomerRepository
+	CustomerRepo repository.JourneyRepository
 	CampaignRepo repository.CampaignRepository
 }
 
 func NewActionTrackingUsecase(input NewActionTrackingUsecaseInput) *ActionTrackingUsecase {
 	return &ActionTrackingUsecase{
-		customerRepo: input.CustomerRepo,
+		journeyRepo:  input.CustomerRepo,
 		campaignRepo: input.CampaignRepo,
 	}
 }
@@ -41,13 +41,13 @@ func (uc *ActionTrackingUsecase) TriggeredActionTracking(ctx context.Context, in
 	if err != nil {
 		return err
 	}
-	stepJourney, err := uc.customerRepo.GetStepJourney(ctx, workspaceID, stepJourneyID)
+	stepJourney, err := uc.journeyRepo.GetStepJourney(ctx, workspaceID, stepJourneyID)
 	if err != nil {
 		return err
 	}
 	stepJourney.AppendTrackingEvent(eventSlug, trackingData)
 
-	err = uc.customerRepo.SaveStepJourney(ctx, stepJourney)
+	err = uc.journeyRepo.SaveStepJourney(ctx, stepJourney)
 	if err != nil {
 		return err
 	}

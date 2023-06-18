@@ -3,29 +3,25 @@ package model
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
-type DynamoCustomer struct {
-	Customer map[string]types.AttributeValue
-	Events   []map[string]types.AttributeValue
-	Segments []map[string]types.AttributeValue
+type DynamoCustomerEvent struct {
+	PK               string         `dynamodbav:"PK"`
+	SK               string         `dynamodbav:"SK"`
+	CustomerEventID  string         `dynamodbav:"customer_event_id"`
+	CustomerID       string         `dynamodbav:"customer_id"`
+	WorkspaceID      string         `dynamodbav:"workspace_id"`
+	Slug             string         `dynamodbav:"slug"`
+	CustomAttributes map[string]any `dynamodbav:"custom_attributes"`
+	OccurredAt       uint32         `dynamodbav:"occured_at"`
 }
 
-func (m *DynamoCustomer) ToDomain(items []map[string]types.AttributeValue) (customer model.Customer) {
-	for _, item := range items {
-		sk, ok := item["SK"]
-		if  !ok {
-			continue
-		}
-		if strings.Contains(, customerSKPrefix) {
-
-		}
-	}
+func (m *DynamoCustomerEvent) ToDomain(item map[string]types.AttributeValue) (customer model.Customer) {
+	attributevalue.UnmarshalMap(item, m)
 
 	return
 }

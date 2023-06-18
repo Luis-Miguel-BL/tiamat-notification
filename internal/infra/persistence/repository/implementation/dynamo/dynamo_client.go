@@ -68,8 +68,31 @@ func (dc *DynamoClient) BatchWrite(ctx context.Context, items []map[string]types
 	return nil
 }
 
+func (dc *DynamoClient) QueryByPK(ctx context.Context, tableName string, pk string) (items []map[string]types.AttributeValue, count int32, err error) {
+	result, err := dc.conn.Query(ctx, &dynamodb.QueryInput{
+		TableName:                 aws.String(tableName),
+		KeyConditionExpression:    aws.String("#pk = :pk"),
+		ExpressionAttributeNames:  map[string]string{"#pk": "PK"},
+		ExpressionAttributeValues: map[string]types.AttributeValue{":pk": &types.AttributeValueMemberS{Value: pk}},
+	})
+
+	if err != nil {
+		if isThottleErr(err) {
+			return items, count, DynamoThottleErr(err)
+		}
+		return items, count, err
+	}
+
+	return result.Items, result.Count, nil
+}
+
 type DynamoThottleErr error
+type DynamoNotFoundErr error
 
 func isThottleErr(err error) bool {
 	return strings.Contains(err.Error(), "rate limit token")
+}
+
+func NewDynamoNotFoundErr(model string) DynamoNotFoundErr {
+	return DynamoNotFoundErr(fmt.Errorf("%s not found", model))
 }
