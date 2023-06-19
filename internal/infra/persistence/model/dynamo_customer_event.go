@@ -2,9 +2,10 @@ package model
 
 import (
 	"fmt"
-	"strconv"
+	"time"
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
@@ -20,113 +21,55 @@ type DynamoCustomerEvent struct {
 	OccurredAt       uint32         `dynamodbav:"occured_at"`
 }
 
-func (m *DynamoCustomerEvent) ToDomain(item map[string]types.AttributeValue) (customer model.Customer) {
-	attributevalue.UnmarshalMap(item, m)
-
-	return
-}
-func (m *DynamoCustomer) ToRepo(customer model.Customer) (err error) {
-	customerPK := MakeCustomerPK(string(customer.WorkspaceID()), string(customer.CustomerID()))
-
-	m.Customer, err = attributevalue.MarshalMap(makeCustomerMap(customer, customerPK))
+func (m *DynamoCustomerEvent) ToDomain(item map[string]types.AttributeValue) (customerEvent *model.CustomerEvent, err error) {
+	err = attributevalue.UnmarshalMap(item, m)
 	if err != nil {
-		return err
+		return customerEvent, err
 	}
 
-	for _, customerEvents := range customer.Events() {
-		for _, customerEvent := range customerEvents {
-			dynamoCustomerEvent, err := attributevalue.MarshalMap(makeCustomerEventMap(customerEvent, customerPK))
-			if err != nil {
-				return err
-			}
-			m.Events = append(m.Events, dynamoCustomerEvent)
-		}
+	eventSlug, err := vo.NewSlug(m.Slug)
+	if err != nil {
+		return customerEvent, err
 	}
-	for _, customerSegment := range customer.Segments() {
-		dynamoCustomerSegment, err := attributevalue.MarshalMap(makeCustomerSegmentMap(customerSegment, customerPK))
-		if err != nil {
-			return err
-		}
-		m.Segments = append(m.Segments, dynamoCustomerSegment)
+	customAttr, err := vo.NewCustomAttributes(m.CustomAttributes)
+	if err != nil {
+		return customerEvent, err
 	}
+	customerEvent, err = model.NewCustomerEventToRepo(model.NewCustomerEventToRepoInput{
+		CustomerEventID:  model.CustomerEventID(m.CustomerEventID),
+		CustomerID:       model.CustomerID(m.CustomerID),
+		WorkspaceID:      model.WorkspaceID(m.WorkspaceID),
+		Slug:             eventSlug,
+		CustomAttributes: customAttr,
+		OccurredAt:       time.Unix(int64(m.OccurredAt), 0),
+	})
 
-	return nil
-
+	return customerEvent, nil
 }
 
-func makeCustomerMap(customer model.Customer, customerPK string) (customerMap map[string]interface{}) {
-	contact := customer.Contact()
-	customerMap = map[string]interface{}{
-		"customer_id":  string(customer.CustomerID()),
-		"workspace_id": string(customer.WorkspaceID()),
-		"external_id":  customer.ExternalID().String(),
-		"name":         customer.Name().String(),
-		"contact": map[string]interface{}{
-			"email": map[string]interface{}{
-				"email_address":   contact.Email.EmailAddress.String(),
-				"unsubscribed_at": strconv.FormatUint(uint64(contact.Email.UnsubscribedAt.Unix()), 10),
-				"bounced_at":      strconv.FormatUint(uint64(contact.Email.BouncedAt.Unix()), 10),
-			},
-			"phone": map[string]interface{}{
-				"phone_number":             contact.Phone.PhoneNumber.String(),
-				"sms_unsubscribed_at":      strconv.FormatUint(uint64(contact.Phone.SMSUnsubscribedAt.Unix()), 10),
-				"whatsapp_unsubscribed_at": strconv.FormatUint(uint64(contact.Phone.WhatsAppUnsubscribedAt.Unix()), 10),
-			},
-		},
-		"custom_attributes": customer.CustomAttributes(),
-		"PK":                customerPK,
-		"SK":                makeCustomerSK(string(customer.WorkspaceID()), customer.ExternalID().String()),
+func (m *DynamoCustomerEvent) ToRepo(customerEvent model.CustomerEvent) (item map[string]types.AttributeValue, err error) {
+	customerPK := MakeCustomerPK(string(customerEvent.WorkspaceID()), string(customerEvent.CustomerID()))
+	customerEventSK := makeCustomerEventSK(string(customerEvent.WorkspaceID()), string(customerEvent.CustomerEventID()))
+
+	m.PK = customerPK
+	m.SK = customerEventSK
+	m.CustomerEventID = string(customerEvent.CustomerEventID())
+	m.CustomerID = string(customerEvent.CustomerID())
+	m.WorkspaceID = string(customerEvent.WorkspaceID())
+	m.Slug = customerEvent.Slug().String()
+	m.CustomAttributes = customerEvent.CustomAttributes()
+	m.OccurredAt = uint32(customerEvent.OccurredAt().Unix())
+
+	item, err = attributevalue.MarshalMap(m)
+	if err != nil {
+		return item, err
 	}
+	return item, nil
 
-	return customerMap
-}
-
-func makeCustomerEventMap(customerEvent model.CustomerEvent, customerPK string) (customerEventMap map[string]interface{}) {
-	customerEventMap = map[string]interface{}{
-		"customer_event_id": string(customerEvent.CustomerEventID()),
-		"customer_id":       string(customerEvent.CustomerID()),
-		"workspace_id":      string(customerEvent.WorkspaceID()),
-		"slug":              customerEvent.Slug().String(),
-		"custom_attributes": customerEvent.CustomAttributes(),
-		"occurred_at":       strconv.FormatUint(uint64(customerEvent.OccurredAt().Unix()), 10),
-		"PK":                customerPK,
-		"SK":                makeCustomerEventSK(string(customerEvent.WorkspaceID()), string(customerEvent.CustomerEventID())),
-	}
-
-	return customerEventMap
-}
-
-func makeCustomerSegmentMap(customerSegment model.CustomerSegment, customerPK string) (customerSegmentMap map[string]interface{}) {
-	customerSegmentMap = map[string]interface{}{
-		"customer_id":  string(customerSegment.CustomerID()),
-		"workspace_id": string(customerSegment.WorkspaceID()),
-		"segment_id":   string(customerSegment.SegmentID()),
-		"matched_at":   strconv.FormatUint(uint64(customerSegment.MatchedAt().Unix()), 10),
-		"PK":           customerPK,
-		"SK":           makeCustomerSegmentSK(string(customerSegment.WorkspaceID()), string(customerSegment.SegmentID())),
-	}
-
-	return customerSegmentMap
-}
-
-func MakeCustomerPK(workspaceID string, customerID string) (pk string) {
-	return fmt.Sprintf("CUSTOMER#%s#%s", workspaceID, customerID)
-}
-
-const customerSKPrefix = "#CUSTOMER"
-
-func makeCustomerSK(workspaceID string, externalID string) (sk string) {
-	return fmt.Sprintf("%s#%s#%s", customerSKPrefix, workspaceID, externalID)
 }
 
 const customerEventSKPrefix = "CUSTOMER_EVENT"
 
 func makeCustomerEventSK(workspaceID string, eventID string) (sk string) {
 	return fmt.Sprintf("%s#%s#%s", customerEventSKPrefix, workspaceID, eventID)
-}
-
-const customerSegmentSKPrefix = "CUSTOMER_SEGMENT"
-
-func makeCustomerSegmentSK(workspaceID string, segmentID string) (sk string) {
-	return fmt.Sprintf("%s#%s#%s", customerSegmentSKPrefix, workspaceID, segmentID)
 }

@@ -46,6 +46,40 @@ func NewCustomerEvent(input NewCustomerEventInput) (customerEvent *CustomerEvent
 	return customerEvent, nil
 }
 
+type NewCustomerEventToRepoInput struct {
+	CustomerEventID  CustomerEventID
+	CustomerID       CustomerID
+	WorkspaceID      WorkspaceID
+	Slug             vo.Slug
+	CustomAttributes vo.CustomAttributes
+	OccurredAt       time.Time
+}
+
+func NewCustomerEventToRepo(input NewCustomerEventToRepoInput) (customerEvent *CustomerEvent, err domain.DomainError) {
+	if input.CustomerEventID == "" {
+		return customerEvent, domain.NewInvalidEmptyParamError("CustomerEventID")
+	}
+	if input.CustomerID == "" {
+		return customerEvent, domain.NewInvalidEmptyParamError("CustomerID")
+	}
+	if input.WorkspaceID == "" {
+		return customerEvent, domain.NewInvalidEmptyParamError("WorkspaceID")
+	}
+	if input.Slug == "" {
+		return customerEvent, domain.NewInvalidEmptyParamError("Slug")
+	}
+	customerEvent = &CustomerEvent{
+		customerEventID:  input.CustomerEventID,
+		customerID:       input.CustomerID,
+		workspaceID:      input.WorkspaceID,
+		slug:             input.Slug,
+		customAttributes: input.CustomAttributes,
+		occurredAt:       input.OccurredAt,
+	}
+
+	return customerEvent, nil
+}
+
 func (e *CustomerEvent) CustomerEventID() CustomerEventID {
 	return e.customerEventID
 }

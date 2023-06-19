@@ -37,6 +37,31 @@ func NewCustomerSegment(input NewCustomerSegmentInput) (satisfiedSegment *Custom
 	}, nil
 }
 
+type NewCustomerSegmentToRepoInput struct {
+	SegmentID   SegmentID
+	CustomerID  CustomerID
+	WorkspaceID WorkspaceID
+	MatchedAt   time.Time
+}
+
+func NewCustomerSegmentToRepo(input NewCustomerSegmentToRepoInput) (satisfiedSegment *CustomerSegment, err error) {
+	if input.SegmentID == "" {
+		return satisfiedSegment, domain.NewInvalidEmptyParamError("SegmentID")
+	}
+	if input.WorkspaceID == "" {
+		return satisfiedSegment, domain.NewInvalidEmptyParamError("WorkspaceID")
+	}
+	if input.CustomerID == "" {
+		return satisfiedSegment, domain.NewInvalidEmptyParamError("CustomerID")
+	}
+	return &CustomerSegment{
+		segmentID:   input.SegmentID,
+		workspaceID: input.WorkspaceID,
+		customerID:  input.CustomerID,
+		matchedAt:   input.MatchedAt,
+	}, nil
+}
+
 func (e *CustomerSegment) SegmentID() SegmentID {
 	return e.segmentID
 }

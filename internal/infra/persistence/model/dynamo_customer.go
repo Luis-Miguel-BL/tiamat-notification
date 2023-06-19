@@ -6,12 +6,22 @@ import (
 	"strings"
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
 type DynamoCustomer struct {
-	Customer map[string]types.AttributeValue
+	PK               string         `dynamodbav:"PK"`
+	SK               string         `dynamodbav:"SK"`
+	CustomerID       string `dynamodbav:"customer_id"`
+	WorkspaceID      string `dynamodbav:"workspace_id"`
+	ExternalID       string `dynamodbav:"external_id"`
+	Name             string `dynamodbav:"name"`
+	Contact          vo.Contact
+	CustomAttributes map[string]any  `dynamodbav:"name"`
+	CreatedAt        uint32  `dynamodbav:"created_at"`
+	UpdatedAt        uint32 `dynamodbav:"updated_at"`
 	Events   []map[string]types.AttributeValue
 	Segments []map[string]types.AttributeValue
 }
@@ -19,10 +29,11 @@ type DynamoCustomer struct {
 func (m *DynamoCustomer) ToDomain(items []map[string]types.AttributeValue) (customer model.Customer) {
 	for _, item := range items {
 		sk, ok := item["SK"]
+		sk.
 		if  !ok {
 			continue
 		}
-		if strings.Contains(, customerSKPrefix) {
+		if strings.Contains(sk, customerSKPrefix) {
 
 		}
 	}
@@ -85,20 +96,6 @@ func makeCustomerMap(customer model.Customer, customerPK string) (customerMap ma
 	return customerMap
 }
 
-func makeCustomerEventMap(customerEvent model.CustomerEvent, customerPK string) (customerEventMap map[string]interface{}) {
-	customerEventMap = map[string]interface{}{
-		"customer_event_id": string(customerEvent.CustomerEventID()),
-		"customer_id":       string(customerEvent.CustomerID()),
-		"workspace_id":      string(customerEvent.WorkspaceID()),
-		"slug":              customerEvent.Slug().String(),
-		"custom_attributes": customerEvent.CustomAttributes(),
-		"occurred_at":       strconv.FormatUint(uint64(customerEvent.OccurredAt().Unix()), 10),
-		"PK":                customerPK,
-		"SK":                makeCustomerEventSK(string(customerEvent.WorkspaceID()), string(customerEvent.CustomerEventID())),
-	}
-
-	return customerEventMap
-}
 
 func makeCustomerSegmentMap(customerSegment model.CustomerSegment, customerPK string) (customerSegmentMap map[string]interface{}) {
 	customerSegmentMap = map[string]interface{}{
@@ -121,16 +118,4 @@ const customerSKPrefix = "#CUSTOMER"
 
 func makeCustomerSK(workspaceID string, externalID string) (sk string) {
 	return fmt.Sprintf("%s#%s#%s", customerSKPrefix, workspaceID, externalID)
-}
-
-const customerEventSKPrefix = "CUSTOMER_EVENT"
-
-func makeCustomerEventSK(workspaceID string, eventID string) (sk string) {
-	return fmt.Sprintf("%s#%s#%s", customerEventSKPrefix, workspaceID, eventID)
-}
-
-const customerSegmentSKPrefix = "CUSTOMER_SEGMENT"
-
-func makeCustomerSegmentSK(workspaceID string, segmentID string) (sk string) {
-	return fmt.Sprintf("%s#%s#%s", customerSegmentSKPrefix, workspaceID, segmentID)
 }

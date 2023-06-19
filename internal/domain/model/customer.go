@@ -81,6 +81,51 @@ func NewCustomer(input NewCustomerInput) (customer *Customer, err domain.DomainE
 	return customer, nil
 }
 
+type NewCustomerToRepoInput struct {
+	CustomerID       CustomerID
+	ExternalID       vo.ExternalID
+	WorkspaceID      WorkspaceID
+	Name             vo.PersonName
+	Contact          vo.Contact
+	CustomAttributes vo.CustomAttributes
+	Events           map[vo.Slug][]CustomerEvent
+	Segments         map[SegmentID]CustomerSegment
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+}
+
+func NewCustomerToRepo(input NewCustomerToRepoInput) (customer *Customer, err domain.DomainError) {
+	if input.CustomerID == "" {
+		return customer, domain.NewInvalidEmptyParamError("CustomerID")
+	}
+	if input.ExternalID == "" {
+		return customer, domain.NewInvalidEmptyParamError("ExternalID")
+	}
+	if input.WorkspaceID == "" {
+		return customer, domain.NewInvalidEmptyParamError("WorkspaceID")
+	}
+	if len(input.Events) == 0 {
+		input.Events = make(map[vo.Slug][]CustomerEvent)
+	}
+	if len(input.Segments) == 0 {
+		input.Segments = make(map[SegmentID]CustomerSegment)
+	}
+	customer = &Customer{
+		AggregateRoot:    domain.NewAggregateRoot(AggregateTypeCustomer, domain.AggregateID(input.CustomerID)),
+		customerID:       input.CustomerID,
+		externalID:       input.ExternalID,
+		workspaceID:      input.WorkspaceID,
+		name:             input.Name,
+		contact:          input.Contact,
+		customAttributes: input.CustomAttributes,
+		events:           input.Events,
+		segments:         input.Segments,
+		createdAt:        input.CreatedAt,
+		updatedAt:        input.UpdatedAt,
+	}
+	return customer, nil
+}
+
 func (e *Customer) CustomerID() CustomerID {
 	return e.customerID
 }
