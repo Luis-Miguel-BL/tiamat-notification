@@ -2,6 +2,7 @@ package util
 
 import (
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -23,4 +24,7 @@ func Includes[T any](values []T, targetValue T) bool {
 		}
 	}
 	return false
+}
+func NewUnixTime(unixDate uint32) time.Time {
+	return time.Unix(int64(unixDate), 0)
 }

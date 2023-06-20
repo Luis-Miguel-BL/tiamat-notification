@@ -2,112 +2,161 @@ package model
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/util"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
 type DynamoCustomer struct {
-	PK               string         `dynamodbav:"PK"`
-	SK               string         `dynamodbav:"SK"`
-	CustomerID       string `dynamodbav:"customer_id"`
-	WorkspaceID      string `dynamodbav:"workspace_id"`
-	ExternalID       string `dynamodbav:"external_id"`
-	Name             string `dynamodbav:"name"`
-	Contact          vo.Contact
-	CustomAttributes map[string]any  `dynamodbav:"name"`
-	CreatedAt        uint32  `dynamodbav:"created_at"`
-	UpdatedAt        uint32 `dynamodbav:"updated_at"`
-	Events   []map[string]types.AttributeValue
-	Segments []map[string]types.AttributeValue
+	PK               string                  `dynamodbav:"PK"`
+	SK               string                  `dynamodbav:"SK"`
+	CustomerID       string                  `dynamodbav:"customer_id"`
+	WorkspaceID      string                  `dynamodbav:"workspace_id"`
+	ExternalID       string                  `dynamodbav:"external_id"`
+	Name             string                  `dynamodbav:"name"`
+	Contact          DynamoCustomerContact   `dynamodbav:"name"`
+	CustomAttributes map[string]any          `dynamodbav:"name"`
+	CreatedAt        uint32                  `dynamodbav:"created_at"`
+	UpdatedAt        uint32                  `dynamodbav:"updated_at"`
+	Events           []DynamoCustomerEvent   `dynamodbav:"-"`
+	Segments         []DynamoCustomerSegment `dynamodbav:"-"`
+}
+type DynamoCustomerContact struct {
+	Email struct {
+		EmailAddress   string `dynamodbav:"email_address"`
+		UnsubscribedAt uint32 `dynamodbav:"unsubscribed_at"`
+		BouncedAt      uint32 `dynamodbav:"bounced_at"`
+	} `dynamodbav:"email"`
+	Phone struct {
+		PhoneNumber            string `dynamodbav:"phone_number"`
+		SMSUnsubscribedAt      uint32 `dynamodbav:"sms_unsubscribed_at"`
+		WhatsAppUnsubscribedAt uint32 `dynamodbav:"whatsapp_unsubscribed_at"`
+	} `dynamodbav:"phone"`
 }
 
-func (m *DynamoCustomer) ToDomain(items []map[string]types.AttributeValue) (customer model.Customer) {
+func (m *DynamoCustomer) ToDomain(items []map[string]types.AttributeValue) (customer *model.Customer, err error) {
+	customerEvents := make(map[vo.Slug][]model.CustomerEvent)
+	customerSegments := make(map[model.SegmentID]model.CustomerSegment)
 	for _, item := range items {
-		sk, ok := item["SK"]
-		sk.
-		if  !ok {
-			continue
+		var sk string
+		err := attributevalue.Unmarshal(item["SK"], &sk)
+		if err != nil {
+			return customer, err
 		}
-		if strings.Contains(sk, customerSKPrefix) {
-
-		}
-	}
-
-	return
-}
-func (m *DynamoCustomer) ToRepo(customer model.Customer) (err error) {
-	customerPK := MakeCustomerPK(string(customer.WorkspaceID()), string(customer.CustomerID()))
-
-	m.Customer, err = attributevalue.MarshalMap(makeCustomerMap(customer, customerPK))
-	if err != nil {
-		return err
-	}
-
-	for _, customerEvents := range customer.Events() {
-		for _, customerEvent := range customerEvents {
-			dynamoCustomerEvent, err := attributevalue.MarshalMap(makeCustomerEventMap(customerEvent, customerPK))
+		switch true {
+		case strings.HasPrefix(sk, customerSKPrefix):
+			attributevalue.UnmarshalMap(item, m)
+		case strings.HasPrefix(sk, customerEventSKPrefix):
+			dynamoCustomerEvent := DynamoCustomerEvent{}
+			customerEvent, err := dynamoCustomerEvent.ToDomain(item)
 			if err != nil {
-				return err
+				return customer, err
 			}
 			m.Events = append(m.Events, dynamoCustomerEvent)
+			customerEvents[customerEvent.Slug()] = append(customerEvents[customerEvent.Slug()], *customerEvent)
+		case strings.HasPrefix(sk, customerSegmentSKPrefix):
+			dynamoCustomerSegment := DynamoCustomerSegment{}
+			customerSegment, err := dynamoCustomerSegment.ToDomain(item)
+			if err != nil {
+				return customer, err
+			}
+			m.Segments = append(m.Segments, dynamoCustomerSegment)
+			customerSegments[customerSegment.SegmentID()] = *customerSegment
 		}
 	}
-	for _, customerSegment := range customer.Segments() {
-		dynamoCustomerSegment, err := attributevalue.MarshalMap(makeCustomerSegmentMap(customerSegment, customerPK))
-		if err != nil {
-			return err
+	externalID, err := vo.NewExternalID(m.ExternalID)
+	if err != nil {
+		return customer, err
+	}
+	name, err := vo.NewPersonName(m.Name)
+	if err != nil {
+		return customer, err
+	}
+	contact, err := vo.NewContactToRepo(vo.NewContactToRepoInput{
+		EmailAddress:           m.Contact.Email.EmailAddress,
+		UnsubscribedAt:         util.NewUnixTime(m.Contact.Email.UnsubscribedAt),
+		BouncedAt:              util.NewUnixTime(m.Contact.Email.BouncedAt),
+		PhoneNumber:            m.Contact.Phone.PhoneNumber,
+		SMSUnsubscribedAt:      util.NewUnixTime(m.Contact.Phone.SMSUnsubscribedAt),
+		WhatsAppUnsubscribedAt: util.NewUnixTime(m.Contact.Phone.WhatsAppUnsubscribedAt),
+	})
+	if err != nil {
+		return customer, err
+	}
+	customer, err = model.NewCustomerToRepo(model.NewCustomerToRepoInput{
+		CustomerID:       model.CustomerID(m.CustomerID),
+		WorkspaceID:      model.WorkspaceID(m.WorkspaceID),
+		ExternalID:       externalID,
+		Name:             name,
+		Contact:          contact,
+		CustomAttributes: m.CustomAttributes,
+		Events:           customerEvents,
+		Segments:         customerSegments,
+		CreatedAt:        util.NewUnixTime(m.CreatedAt),
+		UpdatedAt:        util.NewUnixTime(m.UpdatedAt),
+	})
+	if err != nil {
+		return customer, err
+	}
+
+	return customer, nil
+}
+func (m *DynamoCustomer) ToRepo(customer model.Customer) (items []map[string]types.AttributeValue, err error) {
+	items = make([]map[string]types.AttributeValue, 0)
+	customerPK := MakeCustomerPK(string(customer.WorkspaceID()), string(customer.CustomerID()))
+	customerSK := makeCustomerSK(string(customer.WorkspaceID()), string(customer.ExternalID()))
+
+	m.PK = customerPK
+	m.SK = customerSK
+
+	m.CustomerID = string(customer.CustomerID())
+	m.WorkspaceID = string(customer.WorkspaceID())
+	m.ExternalID = string(customer.ExternalID())
+	m.Name = customer.Name().String()
+
+	customerContact := customer.Contact()
+	m.Contact.Email.EmailAddress = customerContact.Email.EmailAddress.String()
+	m.Contact.Email.UnsubscribedAt = uint32(customerContact.Email.UnsubscribedAt.Unix())
+	m.Contact.Email.BouncedAt = uint32(customerContact.Email.BouncedAt.Unix())
+	m.Contact.Phone.PhoneNumber = customerContact.Phone.PhoneNumber.String()
+	m.Contact.Phone.SMSUnsubscribedAt = uint32(customerContact.Phone.SMSUnsubscribedAt.Unix())
+	m.Contact.Phone.WhatsAppUnsubscribedAt = uint32(customerContact.Phone.WhatsAppUnsubscribedAt.Unix())
+
+	m.CustomAttributes = customer.CustomAttributes()
+	m.CreatedAt = uint32(customer.CreatedAt().Unix())
+	m.UpdatedAt = uint32(customer.UpdatedAt().Unix())
+
+	dynamoCustomerEvents := make([]DynamoCustomerEvent, 0)
+	for _, events := range customer.Events() {
+		for _, event := range events {
+			dynamoCustomerEvent := DynamoCustomerEvent{}
+			item, _ := dynamoCustomerEvent.ToRepo(event)
+			dynamoCustomerEvents = append(dynamoCustomerEvents, dynamoCustomerEvent)
+			items = append(items, item)
 		}
-		m.Segments = append(m.Segments, dynamoCustomerSegment)
 	}
+	m.Events = dynamoCustomerEvents
 
-	return nil
-
-}
-
-func makeCustomerMap(customer model.Customer, customerPK string) (customerMap map[string]interface{}) {
-	contact := customer.Contact()
-	customerMap = map[string]interface{}{
-		"customer_id":  string(customer.CustomerID()),
-		"workspace_id": string(customer.WorkspaceID()),
-		"external_id":  customer.ExternalID().String(),
-		"name":         customer.Name().String(),
-		"contact": map[string]interface{}{
-			"email": map[string]interface{}{
-				"email_address":   contact.Email.EmailAddress.String(),
-				"unsubscribed_at": strconv.FormatUint(uint64(contact.Email.UnsubscribedAt.Unix()), 10),
-				"bounced_at":      strconv.FormatUint(uint64(contact.Email.BouncedAt.Unix()), 10),
-			},
-			"phone": map[string]interface{}{
-				"phone_number":             contact.Phone.PhoneNumber.String(),
-				"sms_unsubscribed_at":      strconv.FormatUint(uint64(contact.Phone.SMSUnsubscribedAt.Unix()), 10),
-				"whatsapp_unsubscribed_at": strconv.FormatUint(uint64(contact.Phone.WhatsAppUnsubscribedAt.Unix()), 10),
-			},
-		},
-		"custom_attributes": customer.CustomAttributes(),
-		"PK":                customerPK,
-		"SK":                makeCustomerSK(string(customer.WorkspaceID()), customer.ExternalID().String()),
+	dynamoCustomerSegments := make([]DynamoCustomerSegment, 0)
+	for _, segment := range customer.Segments() {
+		dynamoCustomerSegment := DynamoCustomerSegment{}
+		item, _ := dynamoCustomerSegment.ToRepo(segment)
+		dynamoCustomerSegments = append(dynamoCustomerSegments, dynamoCustomerSegment)
+		items = append(items, item)
 	}
+	m.Segments = dynamoCustomerSegments
 
-	return customerMap
-}
-
-
-func makeCustomerSegmentMap(customerSegment model.CustomerSegment, customerPK string) (customerSegmentMap map[string]interface{}) {
-	customerSegmentMap = map[string]interface{}{
-		"customer_id":  string(customerSegment.CustomerID()),
-		"workspace_id": string(customerSegment.WorkspaceID()),
-		"segment_id":   string(customerSegment.SegmentID()),
-		"matched_at":   strconv.FormatUint(uint64(customerSegment.MatchedAt().Unix()), 10),
-		"PK":           customerPK,
-		"SK":           makeCustomerSegmentSK(string(customerSegment.WorkspaceID()), string(customerSegment.SegmentID())),
+	item, err := attributevalue.MarshalMap(m)
+	if err != nil {
+		return items, err
 	}
+	items = append(items, item)
 
-	return customerSegmentMap
+	return items, nil
 }
 
 func MakeCustomerPK(workspaceID string, customerID string) (pk string) {

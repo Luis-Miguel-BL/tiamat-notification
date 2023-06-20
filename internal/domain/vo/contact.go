@@ -76,3 +76,25 @@ func (e *ContactPhone) SetWhatsAppUnsubscribedAt(bouncedAt time.Time) error {
 func (e *ContactPhone) IsWhatsAppUnsubscribed() bool {
 	return e.WhatsAppUnsubscribedAt.IsZero()
 }
+
+type NewContactToRepoInput struct {
+	EmailAddress           string
+	UnsubscribedAt         time.Time
+	BouncedAt              time.Time
+	PhoneNumber            string
+	SMSUnsubscribedAt      time.Time
+	WhatsAppUnsubscribedAt time.Time
+}
+
+func NewContactToRepo(input NewContactToRepoInput) (contact Contact, err error) {
+	contact, err = NewContact(input.EmailAddress, input.PhoneNumber)
+	if err != nil {
+		return contact, err
+	}
+	contact.Email.UnsubscribedAt = input.UnsubscribedAt
+	contact.Email.BouncedAt = input.BouncedAt
+	contact.Phone.SMSUnsubscribedAt = input.SMSUnsubscribedAt
+	contact.Phone.WhatsAppUnsubscribedAt = input.WhatsAppUnsubscribedAt
+
+	return contact, nil
+}
