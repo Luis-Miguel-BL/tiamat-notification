@@ -139,11 +139,24 @@ func (e *Customer) ExternalID() vo.ExternalID {
 func (e *Customer) Name() vo.PersonName {
 	return e.name
 }
+func (e *Customer) SetName(name vo.PersonName) {
+	e.name = name
+	e.updatedAt = time.Now()
+}
 func (e *Customer) Contact() vo.Contact {
 	return e.contact
 }
+func (e *Customer) SetContact(email vo.EmailAddress, phone vo.PhoneNumber) {
+	e.contact.Email.EmailAddress = email
+	e.contact.Phone.PhoneNumber = phone
+	e.updatedAt = time.Now()
+}
 func (e *Customer) CustomAttributes() vo.CustomAttributes {
 	return e.customAttributes
+}
+func (e *Customer) SetCustomAttributes(customAttr vo.CustomAttributes) {
+	e.customAttributes = customAttr
+	e.updatedAt = time.Now()
 }
 func (e *Customer) Events() map[vo.Slug][]CustomerEvent {
 	return e.events

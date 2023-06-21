@@ -16,3 +16,9 @@ func NewNotFoundError(description string) DomainError {
 func NewInvalidOperationError(operation string, description string) DomainError {
 	return DomainError(fmt.Errorf("invalid operation %s: %s", operation, description))
 }
+
+type EntityNotFoundError DomainError
+
+func NewEntityNotFoundError(entity string) EntityNotFoundError {
+	return DomainError(fmt.Errorf("%s not found", entity))
+}

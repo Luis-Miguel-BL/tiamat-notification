@@ -25,7 +25,6 @@ func (uc *SaveCustomerUsecase) SaveCustomer(ctx context.Context, input input.Sav
 		return err
 	}
 	workspaceID := model.WorkspaceID(input.WorkspaceID)
-
 	externalID, err := vo.NewExternalID(input.ExternalID)
 	if err != nil {
 		return err
@@ -34,31 +33,46 @@ func (uc *SaveCustomerUsecase) SaveCustomer(ctx context.Context, input input.Sav
 	if err != nil {
 		return err
 	}
-
-	contact, err := vo.NewContact(input.Contact.EmailAddress, input.Contact.PhoneNumber)
+	email, err := vo.NewEmailAddress(input.Contact.EmailAddress)
 	if err != nil {
 		return err
 	}
-
+	phone, err := vo.NewPhoneNumber(input.Contact.PhoneNumber)
+	if err != nil {
+		return err
+	}
 	customAttr, err := vo.NewCustomAttributes(input.CustomAttributes)
 	if err != nil {
 		return err
 	}
-
-	customerToCreate, err := model.NewCustomer(
-		model.NewCustomerInput{
-			ExternalID:       externalID,
-			WorkspaceID:      workspaceID,
-			Name:             customerName,
-			Contact:          contact,
-			CustomAttributes: customAttr,
-		},
-	)
+	customer, find, err := uc.repo.GetByExternalID(ctx, externalID, workspaceID)
 	if err != nil {
 		return err
 	}
+	if !find {
+		contact, err := vo.NewContact(input.Contact.EmailAddress, input.Contact.PhoneNumber)
+		if err != nil {
+			return err
+		}
+		customer, err = model.NewCustomer(
+			model.NewCustomerInput{
+				ExternalID:       externalID,
+				WorkspaceID:      workspaceID,
+				Name:             customerName,
+				Contact:          contact,
+				CustomAttributes: customAttr,
+			},
+		)
+		if err != nil {
+			return err
+		}
+	} else {
+		customer.SetName(customerName)
+		customer.SetContact(email, phone)
+		customer.SetCustomAttributes(customAttr)
+	}
 
-	err = uc.repo.Save(ctx, *customerToCreate)
+	err = uc.repo.Save(ctx, *customer)
 
 	return err
 }

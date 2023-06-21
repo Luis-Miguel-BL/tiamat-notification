@@ -108,7 +108,7 @@ func (m *DynamoCustomer) ToDomain(items []map[string]types.AttributeValue) (cust
 func (m *DynamoCustomer) ToRepo(customer model.Customer) (items []map[string]types.AttributeValue, err error) {
 	items = make([]map[string]types.AttributeValue, 0)
 	customerPK := MakeCustomerPK(string(customer.WorkspaceID()), string(customer.CustomerID()))
-	customerSK := makeCustomerSK(string(customer.WorkspaceID()), string(customer.ExternalID()))
+	customerSK := MakeCustomerSK(string(customer.WorkspaceID()), string(customer.ExternalID()))
 
 	m.PK = customerPK
 	m.SK = customerSK
@@ -165,6 +165,6 @@ func MakeCustomerPK(workspaceID string, customerID string) (pk string) {
 
 const customerSKPrefix = "#CUSTOMER"
 
-func makeCustomerSK(workspaceID string, externalID string) (sk string) {
+func MakeCustomerSK(workspaceID string, externalID string) (sk string) {
 	return fmt.Sprintf("%s#%s#%s", customerSKPrefix, workspaceID, externalID)
 }

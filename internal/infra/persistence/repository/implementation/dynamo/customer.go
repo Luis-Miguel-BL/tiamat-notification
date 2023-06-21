@@ -3,12 +3,15 @@ package dynamo
 import (
 	"context"
 
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"
 	dynamo_model "github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/persistence/model"
 )
 
 const (
-	customerTableName = "customer"
+	customerTableName    = "customer"
+	customerTableSKIndex = "customer-sk-index"
 )
 
 type DynamoCustomerRepo struct {
@@ -38,7 +41,7 @@ func (r *DynamoCustomerRepo) GetByID(ctx context.Context, customerID model.Custo
 		return customer, err
 	}
 	if count == 0 {
-		return customer, NewDynamoNotFoundErr("customer")
+		return customer, domain.NewEntityNotFoundError("customer")
 	}
 
 	customer, err = dynamoCustomer.ToDomain(dynamoResult)
@@ -47,4 +50,27 @@ func (r *DynamoCustomerRepo) GetByID(ctx context.Context, customerID model.Custo
 	}
 
 	return customer, nil
+}
+func (r *DynamoCustomerRepo) GetByExternalID(ctx context.Context, externalID vo.ExternalID, workspaceID model.WorkspaceID) (customer *model.Customer, find bool, err error) {
+	dynamoCustomer := dynamo_model.DynamoCustomer{}
+	dynamoResult, count, err := r.client.QueryByIndex(
+		ctx,
+		customerTableName,
+		customerTableSKIndex,
+		"SK",
+		dynamo_model.MakeCustomerSK(string(workspaceID), string(externalID)),
+	)
+	if err != nil {
+		return customer, false, err
+	}
+	if count == 0 {
+		return customer, false, domain.NewEntityNotFoundError("customer")
+	}
+
+	customer, err = dynamoCustomer.ToDomain(dynamoResult)
+	if err != nil {
+		return customer, false, err
+	}
+
+	return customer, true, nil
 }
