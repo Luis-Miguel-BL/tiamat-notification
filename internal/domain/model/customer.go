@@ -69,13 +69,9 @@ func NewCustomer(input NewCustomerInput) (customer *Customer, err domain.DomainE
 			AggregateType: customer.AggregateType(),
 			AggregateID:   customer.AggregateID(),
 		}),
-		CustomerID:       string(customer.customerID),
-		WorkspaceID:      string(customer.workspaceID),
-		ExternalID:       customer.externalID,
-		Name:             customer.name,
-		Contact:          customer.contact,
-		CustomAttributes: customer.customAttributes,
-		CreatedAt:        customer.createdAt,
+		CustomerID:  string(customer.customerID),
+		WorkspaceID: string(customer.workspaceID),
+		CreatedAt:   customer.createdAt,
 	})
 
 	return customer, nil
@@ -221,11 +217,9 @@ func (e *Customer) AppendCustomerEvent(slug vo.Slug, customAttributes vo.CustomA
 				AggregateType: e.AggregateType(),
 				AggregateID:   e.AggregateID(),
 			}),
-			CustomerID:       string(e.customerID),
-			WorkspaceID:      string(e.workspaceID),
-			CustomerEventID:  string(customerEvent.customerEventID),
-			Slug:             customerEvent.Slug(),
-			CustomAttributes: customerEvent.CustomAttributes(),
+			CustomerID:      string(e.customerID),
+			WorkspaceID:     string(e.workspaceID),
+			CustomerEventID: string(customerEvent.customerEventID),
 		})
 	return nil
 }

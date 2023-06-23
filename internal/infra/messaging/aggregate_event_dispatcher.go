@@ -16,9 +16,13 @@ func NewAggregateEventDispatcher(eventbus domain.EventBus) *AggregateEventDispat
 	}
 }
 
-func (d *AggregateEventDispatcher) PublishUncommitedEvents(ctx context.Context, aggregate domain.AggregateRoot) {
+func (d *AggregateEventDispatcher) PublishUncommitedEvents(ctx context.Context, aggregate domain.AggregateRoot) (err error) {
 	uncommittedEvents := aggregate.CatchUncommitedEvents()
 	for _, event := range uncommittedEvents {
-		d.Eventbus.Publish(ctx, event)
+		err = d.Eventbus.Publish(ctx, event)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }

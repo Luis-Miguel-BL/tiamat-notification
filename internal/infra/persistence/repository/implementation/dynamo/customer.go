@@ -6,6 +6,7 @@ import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/messaging"
 	dynamo_model "github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/persistence/model"
 )
 
@@ -15,7 +16,8 @@ const (
 )
 
 type DynamoCustomerRepo struct {
-	client *DynamoClient
+	client     *DynamoClient
+	dispatcher messaging.AggregateEventDispatcher
 }
 
 func (r *DynamoCustomerRepo) Save(ctx context.Context, customer model.Customer) (err error) {
@@ -26,8 +28,16 @@ func (r *DynamoCustomerRepo) Save(ctx context.Context, customer model.Customer) 
 	}
 
 	err = r.client.BatchWrite(ctx, items, customerTableName)
+	if err != nil {
+		return err
+	}
 
-	return err
+	err = r.dispatcher.PublishUncommitedEvents(ctx, *customer.AggregateRoot)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *DynamoCustomerRepo) GetByID(ctx context.Context, customerID model.CustomerID, workspaceID model.WorkspaceID) (customer *model.Customer, err error) {
@@ -51,6 +61,7 @@ func (r *DynamoCustomerRepo) GetByID(ctx context.Context, customerID model.Custo
 
 	return customer, nil
 }
+
 func (r *DynamoCustomerRepo) GetByExternalID(ctx context.Context, externalID vo.ExternalID, workspaceID model.WorkspaceID) (customer *model.Customer, find bool, err error) {
 	dynamoCustomer := dynamo_model.DynamoCustomer{}
 	dynamoResult, count, err := r.client.QueryByIndex(

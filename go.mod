@@ -1,14 +1,14 @@
 module github.com/Luis-Miguel-BL/tiamat-notification
 
-go 1.20
+go 1.19
 
 require (
+	github.com/aws/aws-sdk-go-v2 v1.18.1
 	github.com/google/uuid v1.3.0
 	github.com/stretchr/testify v1.8.4
 )
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.18.1 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.26 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.34 // indirect
@@ -25,10 +25,11 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
-	golang.org/x/sys v0.0.0-20210927094055-39ccf1dd6fa6 // indirect
+	golang.org/x/sys v0.1.0 // indirect
 )
 
 require (
+	github.com/aws/aws-sdk-go v1.44.288
 	github.com/aws/aws-sdk-go-v2/config v1.18.27
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.10.28
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.19.10

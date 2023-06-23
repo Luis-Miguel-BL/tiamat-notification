@@ -3,9 +3,14 @@ package config
 import "time"
 
 type Config struct {
-	DBConfig DBConfig
+	EventBridge EventBridgeConfig
+	DBConfig    DBConfig
 }
 
+type EventBridgeConfig struct {
+	Region       string
+	EventBusName string
+}
 type DBConfig struct {
 	RetryOptions RetryOptions
 	DynamoRegion string
