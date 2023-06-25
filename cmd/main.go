@@ -17,7 +17,7 @@ import (
 var ctx context.Context
 var cfg *config.Config
 var log logger.Logger
-var usecaseManager usecase.UsecaseManager
+var usecaseManager *usecase.UsecaseManager
 
 func init() {
 	ctx = context.Background()
@@ -30,7 +30,7 @@ func init() {
 		panic(err)
 	}
 
-	usecaseManager = *usecase.NewUsecaseManager(repositoryManager, gateway.GatewayManager{})
+	usecaseManager = usecase.NewUsecaseManager(repositoryManager, gateway.GatewayManager{})
 }
 
 func main() {
