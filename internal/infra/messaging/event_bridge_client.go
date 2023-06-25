@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/application/config"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/application/logger"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/logger"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/eventbridge"

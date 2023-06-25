@@ -3,6 +3,8 @@ package config
 import "time"
 
 type Config struct {
+	AppName     string
+	EntryPoint  string
 	EventBridge EventBridgeConfig
 	DBConfig    DBConfig
 }

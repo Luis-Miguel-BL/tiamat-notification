@@ -7,11 +7,11 @@ type GatewayManager struct {
 	SchedulerGateway SchedulerGateway
 }
 
-func NewGatewayManager(emailGateway EmailGateway, smsGateway SMSGateway, whatsappGateway WhatsappGateway, schedulerGateway SchedulerGateway) *GatewayManager {
-	return &GatewayManager{
-		EmailGateway:     emailGateway,
-		SMSGateway:       smsGateway,
-		WhatsappGateway:  whatsappGateway,
-		SchedulerGateway: schedulerGateway,
-	}
-}
+// func NewGatewayManager(emailGateway EmailGateway, smsGateway SMSGateway, whatsappGateway WhatsappGateway, schedulerGateway SchedulerGateway) *GatewayManager {
+// 	return &GatewayManager{
+// 		EmailGateway:     emailGateway,
+// 		SMSGateway:       smsGateway,
+// 		WhatsappGateway:  whatsappGateway,
+// 		SchedulerGateway: schedulerGateway,
+// 	}
+// }

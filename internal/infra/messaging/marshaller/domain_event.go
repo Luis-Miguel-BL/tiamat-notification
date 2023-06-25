@@ -2,7 +2,6 @@ package marshaller
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/event"
@@ -27,7 +26,7 @@ func NewDomainEventMarshaller() *DomainEventMarshaller {
 	}
 }
 
-func (m *DomainEventMarshaller) Marshal(event domain.DomainEvent) (eventJson string, err error) {
+func MarshalDomainEvent(event domain.DomainEvent) (eventJson string, err error) {
 	eventData, err := json.Marshal(map[string]interface{}{
 		"event_type":     event.EventType(),
 		"aggregate_type": event.AggregateType(),
@@ -42,28 +41,9 @@ func (m *DomainEventMarshaller) Marshal(event domain.DomainEvent) (eventJson str
 
 	return string(eventData), nil
 }
-func (m *DomainEventMarshaller) Unmarshal(data string) (domainEvent domain.DomainEvent, err error) {
-	rawEvent := map[string]any{}
-	err = json.Unmarshal([]byte(data), &rawEvent)
-
+func UnmarshalDomainEvent[T domain.DomainEvent](data string) (domainEvent T, err error) {
+	err = json.Unmarshal([]byte(data), &domainEvent)
 	if err != nil {
-		return domainEvent, err
-	}
-
-	eventType, ok := rawEvent["event_type"].(string)
-	if !ok {
-		return domainEvent, fmt.Errorf("invalid event_type field: %s", string(data))
-	}
-
-	domainEvent, ok = m.eventTypeRegistry[eventType]
-	if !ok {
-		return domainEvent, fmt.Errorf("invalid event_type field %s", string(data))
-	}
-
-	eventDataJson, _ := json.Marshal(rawEvent["data"])
-
-	err = json.Unmarshal(eventDataJson, domainEvent)
-	if !ok {
 		return domainEvent, err
 	}
 

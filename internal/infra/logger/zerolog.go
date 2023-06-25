@@ -5,8 +5,6 @@ import (
 	"os"
 	"reflect"
 
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/application/logger"
-
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -16,7 +14,7 @@ type ZeroLogger struct {
 	service string
 }
 
-func NewZerologger(service string) logger.Logger {
+func NewZerologger(service string) Logger {
 	log.Logger = zerolog.New(os.Stderr).With().Str("service", service).Timestamp().Logger()
 	return &ZeroLogger{
 		log:     log.Logger,
@@ -24,20 +22,20 @@ func NewZerologger(service string) logger.Logger {
 	}
 }
 
-func (l *ZeroLogger) SetLevel(level logger.LogLevel) {
-	mapLevel := map[logger.LogLevel]zerolog.Level{
-		logger.Trace: zerolog.TraceLevel,
-		logger.Info:  zerolog.InfoLevel,
-		logger.Debug: zerolog.DebugLevel,
-		logger.Warn:  zerolog.WarnLevel,
-		logger.Error: zerolog.ErrorLevel,
-		logger.Fatal: zerolog.FatalLevel,
+func (l *ZeroLogger) SetLevel(level LogLevel) {
+	mapLevel := map[LogLevel]zerolog.Level{
+		Trace: zerolog.TraceLevel,
+		Info:  zerolog.InfoLevel,
+		Debug: zerolog.DebugLevel,
+		Warn:  zerolog.WarnLevel,
+		Error: zerolog.ErrorLevel,
+		Fatal: zerolog.FatalLevel,
 	}
 
 	zerolog.SetGlobalLevel(mapLevel[level])
 }
 
-func (l *ZeroLogger) parseFields(fields logger.Fields) {
+func (l *ZeroLogger) parseFields(fields Fields) {
 	for k, v := range fields {
 		switch t := v.(type) {
 		case string:
@@ -60,11 +58,11 @@ func (l *ZeroLogger) parseFields(fields logger.Fields) {
 	}
 }
 
-func (l *ZeroLogger) WithFields(fields logger.Fields) {
+func (l *ZeroLogger) WithFields(fields Fields) {
 	l.parseFields(fields)
 }
 
-func (l *ZeroLogger) NewWithFields(fields logger.Fields) {
+func (l *ZeroLogger) NewWithFields(fields Fields) {
 	l.log = zerolog.New(os.Stderr).With().Str("service", l.service).Timestamp().Logger()
 	l.parseFields(fields)
 }

@@ -30,6 +30,9 @@ func (m *DynamoCustomerSegment) ToDomain(item map[string]types.AttributeValue) (
 		SegmentID:   model.SegmentID(m.SegmentID),
 		MatchedAt:   time.Unix(int64(m.MatchedAt), 0),
 	})
+	if err != nil {
+		return customerSegment, err
+	}
 
 	return customerSegment, nil
 }

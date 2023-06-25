@@ -77,7 +77,7 @@ func NewCustomer(input NewCustomerInput) (customer *Customer, err domain.DomainE
 	return customer, nil
 }
 
-type NewCustomerToRepoInput struct {
+type RestoreToRepoInput struct {
 	CustomerID       CustomerID
 	ExternalID       vo.ExternalID
 	WorkspaceID      WorkspaceID
@@ -90,7 +90,7 @@ type NewCustomerToRepoInput struct {
 	UpdatedAt        time.Time
 }
 
-func NewCustomerToRepo(input NewCustomerToRepoInput) (customer *Customer, err domain.DomainError) {
+func RestoreToRepo(input RestoreToRepoInput) (customer *Customer, err domain.DomainError) {
 	if input.CustomerID == "" {
 		return customer, domain.NewInvalidEmptyParamError("CustomerID")
 	}

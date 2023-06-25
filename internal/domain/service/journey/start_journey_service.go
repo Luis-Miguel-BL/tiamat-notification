@@ -6,13 +6,12 @@ import (
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/repository"
 )
 
 type StartJourneyService struct {
 }
 
-func NewStartJourneyService(repo repository.CustomerRepository) StartJourneyService {
+func NewStartJourneyService() StartJourneyService {
 	return StartJourneyService{}
 }
 

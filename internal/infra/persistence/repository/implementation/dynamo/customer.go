@@ -20,7 +20,14 @@ type DynamoCustomerRepo struct {
 	dispatcher messaging.AggregateEventDispatcher
 }
 
-func (r *DynamoCustomerRepo) Save(ctx context.Context, customer model.Customer) (err error) {
+func NewDynamoCustomerRepo(client *DynamoClient, dispatcher messaging.AggregateEventDispatcher) DynamoCustomerRepo {
+	return DynamoCustomerRepo{
+		client:     client,
+		dispatcher: dispatcher,
+	}
+}
+
+func (r DynamoCustomerRepo) Save(ctx context.Context, customer model.Customer) (err error) {
 	dynamoModel := dynamo_model.DynamoCustomer{}
 	items, err := dynamoModel.ToRepo(customer)
 	if err != nil {
@@ -40,7 +47,7 @@ func (r *DynamoCustomerRepo) Save(ctx context.Context, customer model.Customer) 
 	return nil
 }
 
-func (r *DynamoCustomerRepo) GetByID(ctx context.Context, customerID model.CustomerID, workspaceID model.WorkspaceID) (customer *model.Customer, err error) {
+func (r DynamoCustomerRepo) GetByID(ctx context.Context, customerID model.CustomerID, workspaceID model.WorkspaceID) (customer *model.Customer, err error) {
 	dynamoCustomer := dynamo_model.DynamoCustomer{}
 	dynamoResult, count, err := r.client.QueryByPK(
 		ctx,
@@ -62,7 +69,7 @@ func (r *DynamoCustomerRepo) GetByID(ctx context.Context, customerID model.Custo
 	return customer, nil
 }
 
-func (r *DynamoCustomerRepo) GetByExternalID(ctx context.Context, externalID vo.ExternalID, workspaceID model.WorkspaceID) (customer *model.Customer, find bool, err error) {
+func (r DynamoCustomerRepo) GetByExternalID(ctx context.Context, externalID vo.ExternalID, workspaceID model.WorkspaceID) (customer *model.Customer, find bool, err error) {
 	dynamoCustomer := dynamo_model.DynamoCustomer{}
 	dynamoResult, count, err := r.client.QueryByIndex(
 		ctx,

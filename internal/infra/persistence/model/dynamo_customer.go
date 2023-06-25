@@ -87,7 +87,7 @@ func (m *DynamoCustomer) ToDomain(items []map[string]types.AttributeValue) (cust
 	if err != nil {
 		return customer, err
 	}
-	customer, err = model.NewCustomerToRepo(model.NewCustomerToRepoInput{
+	customer, err = model.RestoreToRepo(model.RestoreToRepoInput{
 		CustomerID:       model.CustomerID(m.CustomerID),
 		WorkspaceID:      model.WorkspaceID(m.WorkspaceID),
 		ExternalID:       externalID,
