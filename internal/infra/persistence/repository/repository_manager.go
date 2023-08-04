@@ -3,8 +3,8 @@ package repository
 import (
 	"context"
 
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/application/config"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/application/repository"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/config"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/logger"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/messaging"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/persistence/repository/implementation/dynamo"

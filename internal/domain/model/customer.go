@@ -135,24 +135,48 @@ func (e *Customer) ExternalID() vo.ExternalID {
 func (e *Customer) Name() vo.PersonName {
 	return e.name
 }
-func (e *Customer) SetName(name vo.PersonName) {
-	e.name = name
+
+type UpdateCustomerInput struct {
+	Name       vo.PersonName
+	Email      vo.EmailAddress
+	Phone      vo.PhoneNumber
+	CustomAttr vo.CustomAttributes
+}
+
+func (e *Customer) Update(input UpdateCustomerInput) {
+	if util.IsEmpty(input.Name.String()) {
+		e.name = input.Name
+	}
+	if util.IsEmpty(input.Email.String()) {
+		e.contact.Email.EmailAddress = input.Email
+	}
+	if util.IsEmpty(input.Phone.String()) {
+		e.contact.Phone.PhoneNumber = input.Phone
+	}
+	for attrKey, attrValue := range input.CustomAttr {
+		e.customAttributes[attrKey] = attrValue
+	}
+
 	e.updatedAt = time.Now()
+
+	e.AggregateRoot.AppendEvent(event.CustomerUpdatedEvent{
+		DomainEventBase: domain.NewDomainEventBase(domain.NewDomainEventBaseInput{
+			EventType:     event.CustomerUpdatedEventType,
+			OccurredAt:    e.createdAt,
+			AggregateType: e.AggregateType(),
+			AggregateID:   e.AggregateID(),
+		}),
+		CustomerID:  string(e.customerID),
+		WorkspaceID: string(e.workspaceID),
+		UpdatedAt:   e.updatedAt,
+	})
 }
-func (e *Customer) Contact() vo.Contact {
-	return e.contact
-}
-func (e *Customer) SetContact(email vo.EmailAddress, phone vo.PhoneNumber) {
-	e.contact.Email.EmailAddress = email
-	e.contact.Phone.PhoneNumber = phone
-	e.updatedAt = time.Now()
-}
+
 func (e *Customer) CustomAttributes() vo.CustomAttributes {
 	return e.customAttributes
 }
-func (e *Customer) SetCustomAttributes(customAttr vo.CustomAttributes) {
-	e.customAttributes = customAttr
-	e.updatedAt = time.Now()
+func (e *Customer) Contact() vo.Contact {
+	return e.contact
 }
 func (e *Customer) Events() map[vo.Slug][]CustomerEvent {
 	return e.events

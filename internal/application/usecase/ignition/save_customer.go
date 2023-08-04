@@ -67,9 +67,12 @@ func (uc *SaveCustomerUsecase) SaveCustomer(ctx context.Context, input input.Sav
 			return err
 		}
 	} else {
-		customer.SetName(customerName)
-		customer.SetContact(email, phone)
-		customer.SetCustomAttributes(customAttr)
+		customer.Update(model.UpdateCustomerInput{
+			Name:       customerName,
+			Email:      email,
+			Phone:      phone,
+			CustomAttr: customAttr,
+		})
 	}
 
 	err = uc.repo.Save(ctx, *customer)

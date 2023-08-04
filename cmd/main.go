@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/cmd/serverless/handler"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/application/config"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/application/usecase"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/config"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/gateway"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/logger"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/messaging"
@@ -19,7 +19,7 @@ var cfg *config.Config
 var log logger.Logger
 var usecaseManager *usecase.UsecaseManager
 
-func init() {
+func main() {
 	ctx = context.Background()
 	cfg = config.LoadConfig()
 	log = logger.NewZerologger(cfg.AppName)
@@ -29,11 +29,8 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-
 	usecaseManager = usecase.NewUsecaseManager(repositoryManager, gateway.GatewayManager{})
-}
 
-func main() {
 	registry := rgt.NewRegistry()
 
 	registry.Provide("usecases", usecaseManager)

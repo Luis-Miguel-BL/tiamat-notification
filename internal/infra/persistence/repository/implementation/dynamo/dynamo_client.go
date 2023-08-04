@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/application/config"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/config"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/logger"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	aws_config "github.com/aws/aws-sdk-go-v2/config"

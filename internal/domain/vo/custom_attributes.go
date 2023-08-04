@@ -33,13 +33,10 @@ func flatten(prefix string, m map[string]any, flattened map[string]any) {
 		rt := reflect.TypeOf(v)
 		switch rt.Kind() {
 		case reflect.Map:
-			fmt.Printf("entrou map %+v - %+v \n", v, rt.Kind())
 			flatten(key, v.(map[string]any), flattened)
 		case reflect.Slice:
-			fmt.Printf("entrou any %+v - %+v \n", v, rt.Kind())
 			flattenArray(key, interfaceToSlice(v), flattened)
 		default:
-			fmt.Printf("entrou default %+v - %+v \n", v, rt.Kind())
 			flattened[key] = v
 		}
 	}

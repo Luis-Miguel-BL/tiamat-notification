@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/application/config"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/config"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/logger"
 	"github.com/aws/aws-sdk-go/aws"
