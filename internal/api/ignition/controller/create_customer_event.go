@@ -13,11 +13,11 @@ import (
 )
 
 type CreateCustomerEventController struct {
-	uc  usecase.CreateCustomerEventUsecase
+	uc  *usecase.CreateCustomerEventUsecase
 	log logger.Logger
 }
 
-func NewCreateCustomerEventController(saveCustomerUsecase usecase.CreateCustomerEventUsecase, log logger.Logger) *CreateCustomerEventController {
+func NewCreateCustomerEventController(saveCustomerUsecase *usecase.CreateCustomerEventUsecase, log logger.Logger) *CreateCustomerEventController {
 	return &CreateCustomerEventController{
 		uc:  saveCustomerUsecase,
 		log: log,

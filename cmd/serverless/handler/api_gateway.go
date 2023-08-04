@@ -4,29 +4,21 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/api/controllers"
-	customer_controller "github.com/Luis-Miguel-BL/tiamat-notification/internal/api/controllers/customer"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/application/usecase"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/logger"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/registry"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/api"
+	customer_controller "github.com/Luis-Miguel-BL/tiamat-notification/internal/api/ignition/controller"
 	"github.com/aws/aws-lambda-go/events"
 )
 
-func ApiGatewayHandle(ctx context.Context, request events.APIGatewayProxyRequest) (response events.APIGatewayProxyResponse, err error) {
-	registry := ctx.Value("registry").(*registry.Registry)
-
-	log := registry.Inject("logger").(*logger.ZeroLogger)
-	usecases := registry.Inject("usecases").(*usecase.UsecaseManager)
-
-	var controller controllers.Controller
+func (h *ServerlessHandler) apiGatewayHandle(ctx context.Context, request events.APIGatewayProxyRequest) (response events.APIGatewayProxyResponse, err error) {
+	var controller api.Controller
 	switch request.Path {
 	case "identify":
-		controller = customer_controller.NewSaveCustomerController(*usecases.SaveCustomer, log)
+		controller = customer_controller.NewSaveCustomerController(h.usecaseManager.SaveCustomer, h.log)
 	default:
 		response.StatusCode = http.StatusNotFound
 		return
 	}
-	res := controller.Execute(ctx, controllers.Request{
+	res := controller.Execute(ctx, api.Request{
 		Method: request.HTTPMethod,
 		Body:   request.Body,
 	})

@@ -2,45 +2,26 @@ package marshaller
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/event"
 )
 
-type DomainEventMarshaller struct {
-	eventTypeRegistry map[string]domain.DomainEvent
-}
+func UnmarshalDomainEventType(eventStr string) (eventType domain.EventType, err error) {
+	mapEvent := make(map[string]interface{})
 
-func NewDomainEventMarshaller() *DomainEventMarshaller {
-	return &DomainEventMarshaller{
-		eventTypeRegistry: map[string]domain.DomainEvent{
-			string(event.ActionTriggedEventType):         event.ActionTrigged{},
-			string(event.CustomerCreatedEventType):       event.CustomerCreatedEvent{},
-			string(event.CustomerEventOccurredEventType): event.CustomerEventOccurredEvent{},
-			string(event.CustomerMatchedEventType):       event.CustomerMatched{},
-			string(event.StepJourneyFailedEventType):     event.StepJourneyFailed{},
-			string(event.StepJourneyScheduledEventType):  event.StepJourneyScheduled{},
-			string(event.StepJourneySkippedEventType):    event.StepJourneySkipped{},
-			string(event.StepJourneySuccessedEventType):  event.StepJourneySuccessed{},
-		},
-	}
-}
-
-func MarshalDomainEvent(event domain.DomainEvent) (eventJson string, err error) {
-	eventData, err := json.Marshal(map[string]interface{}{
-		"event_type":     event.EventType(),
-		"aggregate_type": event.AggregateType(),
-		"aggregate_id":   event.AggregateID(),
-		"occurred_at":    event.OccurredAt(),
-		"data":           event,
-	})
-
+	err = json.Unmarshal([]byte(eventStr), &mapEvent)
 	if err != nil {
-		return eventJson, err
+		return eventType, err
+	}
+	eventType, ok := mapEvent["eventType"].(domain.EventType)
+	if !ok {
+		return eventType, fmt.Errorf("eventType not found %s", eventStr)
 	}
 
-	return string(eventData), nil
+	return eventType, nil
 }
+
 func UnmarshalDomainEvent[T domain.DomainEvent](data string) (domainEvent T, err error) {
 	err = json.Unmarshal([]byte(data), &domainEvent)
 	if err != nil {

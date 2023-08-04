@@ -13,11 +13,11 @@ import (
 )
 
 type SaveCustomerController struct {
-	uc  usecase.SaveCustomerUsecase
+	uc  *usecase.SaveCustomerUsecase
 	log logger.Logger
 }
 
-func NewSaveCustomerController(saveCustomerUsecase usecase.SaveCustomerUsecase, log logger.Logger) *SaveCustomerController {
+func NewSaveCustomerController(saveCustomerUsecase *usecase.SaveCustomerUsecase, log logger.Logger) *SaveCustomerController {
 	return &SaveCustomerController{
 		uc:  saveCustomerUsecase,
 		log: log,

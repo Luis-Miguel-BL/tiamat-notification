@@ -10,14 +10,14 @@ var StepJourneyScheduledEventType = domain.EventType("step-journey-scheduled")
 
 type StepJourneyScheduled struct {
 	*domain.DomainEventBase
-	CustomerID    string
-	WorkspaceID   string
-	CampaignID    string
-	ActionID      string
-	StepJourneyID string
-	JourneyID     string
-	Reason        ScheduledReason
-	TriggeredAt   time.Time
+	CustomerID    string          `json:"customer_id"`
+	WorkspaceID   string          `json:"workspace_id"`
+	CampaignID    string          `json:"campaign_id"`
+	ActionID      string          `json:"action_id"`
+	StepJourneyID string          `json:"step_journey_id"`
+	JourneyID     string          `json:"journey_id"`
+	Reason        ScheduledReason `json:"reason"`
+	TriggeredAt   time.Time       `json:"triggered_at"`
 }
 
 type ScheduledReason string

@@ -10,8 +10,7 @@ import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/logger"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/messaging"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/persistence/repository"
-	rgt "github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/registry"
-	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambda"
 )
 
 var ctx context.Context
@@ -21,6 +20,7 @@ var usecaseManager *usecase.UsecaseManager
 
 func main() {
 	ctx = context.Background()
+
 	cfg = config.LoadConfig()
 	log = logger.NewZerologger(cfg.AppName)
 	eventBus := messaging.NewEventBridgeClient(cfg.EventBridge, log, cfg.AppName)
@@ -31,20 +31,8 @@ func main() {
 	}
 	usecaseManager = usecase.NewUsecaseManager(repositoryManager, gateway.GatewayManager{})
 
-	registry := rgt.NewRegistry()
+	handlerManager := handler.NewServerlessHandler(cfg, log, usecaseManager)
 
-	registry.Provide("usecases", usecaseManager)
-	registry.Provide("logger", log)
-	registry.Provide("config", cfg)
-
-	ctx = context.WithValue(ctx, "registry", registry)
-
-	switch cfg.EntryPoint {
-	case "event-bridge":
-		// lambda.StartWithOptions(handler.EventBridgeHandle, lambda.WithContext(ctx))
-		handler.EventBridgeHandle(ctx, events.CloudWatchEvent{})
-	default:
-		panic("entry point not found")
-	}
+	lambda.StartWithOptions(handlerManager, lambda.WithContext(ctx))
 
 }

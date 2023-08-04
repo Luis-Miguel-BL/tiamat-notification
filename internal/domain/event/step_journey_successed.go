@@ -10,11 +10,11 @@ var StepJourneySuccessedEventType = domain.EventType("step-journey-successed")
 
 type StepJourneySuccessed struct {
 	*domain.DomainEventBase
-	CustomerID    string
-	WorkspaceID   string
-	CampaignID    string
-	ActionID      string
-	StepJourneyID string
-	JourneyID     string
-	TriggeredAt   time.Time
+	CustomerID    string    `json:"customer_id"`
+	WorkspaceID   string    `json:"workspace_id"`
+	CampaignID    string    `json:"campaign_id"`
+	ActionID      string    `json:"action_id"`
+	StepJourneyID string    `json:"step_journey_id"`
+	JourneyID     string    `json:"journey_id"`
+	TriggeredAt   time.Time `json:"triggered_at"`
 }
