@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/api"
-	match_consumer "github.com/Luis-Miguel-BL/tiamat-notification/internal/api/match/consumer"
+	match_consumer "github.com/Luis-Miguel-BL/tiamat-notification/internal/api/consumer/match"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/messaging/marshaller"
 	"github.com/aws/aws-lambda-go/events"
 )

@@ -10,7 +10,7 @@ import (
 )
 
 func (h *ServerlessHandler) apiGatewayHandle(ctx context.Context, request events.APIGatewayProxyRequest) (response events.APIGatewayProxyResponse, err error) {
-	var controller api.Controller
+	var controllerFunc api.ControllerFunc
 	switch request.Path {
 	case "identify":
 		controller = customer_controller.NewSaveCustomerController(h.usecaseManager.SaveCustomer, h.log)
@@ -18,7 +18,7 @@ func (h *ServerlessHandler) apiGatewayHandle(ctx context.Context, request events
 		response.StatusCode = http.StatusNotFound
 		return
 	}
-	res := controller.Execute(ctx, api.Request{
+	res := controllerFunc(ctx, api.Request{
 		Method: request.HTTPMethod,
 		Body:   request.Body,
 	})
