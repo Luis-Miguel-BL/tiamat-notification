@@ -44,9 +44,11 @@ func (c *SaveCustomerController) Execute(ctx context.Context, rawRequest api.Req
 	})
 	if err != nil {
 		res.StatusCode = http.StatusBadRequest
+		res.Body = err.Error()
+		return
 	}
 
-	res.StatusCode = http.StatusOK
+	res.StatusCode = http.StatusNoContent
 
 	return res
 }

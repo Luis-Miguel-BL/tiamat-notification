@@ -1,7 +1,7 @@
 package decorator
 
 import (
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/application/repository"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/repository"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/cache"
 )
 

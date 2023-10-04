@@ -1,5 +1,7 @@
 package api
 
+import "context"
+
 type Request struct {
 	Method string
 	Body   string
@@ -13,8 +15,4 @@ type RequestBody interface {
 	Validate() error
 }
 
-type ControllerFunc func(Request) Response
-
-type Router interface {
-	Handle(path string, req Request) (res Response)
-}
+type ControllerFunc func(context.Context, Request) Response

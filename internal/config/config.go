@@ -7,6 +7,7 @@ type Config struct {
 	EntryPoint  string
 	EventBridge EventBridgeConfig
 	DBConfig    DBConfig
+	Server      ServerConfig
 }
 
 type EventBridgeConfig struct {
@@ -14,6 +15,7 @@ type EventBridgeConfig struct {
 	EventBusName string
 }
 type DBConfig struct {
+	InMemory     bool
 	RetryOptions RetryOptions
 	DynamoRegion string
 }
@@ -21,4 +23,8 @@ type DBConfig struct {
 type RetryOptions struct {
 	MaxRetries int
 	Delay      time.Duration
+}
+
+type ServerConfig struct {
+	Port int
 }

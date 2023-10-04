@@ -118,7 +118,7 @@ func (e *Journey) AppendNextStepJourney(actionID ActionID) (err error) {
 	return nil
 }
 
-func (e *Journey) SkippStep(stepJourney StepJourney, reason event.SkippedReason) {
+func (e *Journey) SkipStep(stepJourney StepJourney, reason event.SkippedReason) {
 	stepJourney.status = StepJourneySkipped
 
 	e.AggregateRoot.AppendEvent(event.StepJourneySkipped{

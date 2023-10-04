@@ -3,9 +3,9 @@ package usecase
 import (
 	"context"
 
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/application/repository"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/application/usecase/match/input"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/repository"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/service/journey"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/service/matcher"
 )

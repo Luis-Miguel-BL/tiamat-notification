@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/api"
-	customer_controller "github.com/Luis-Miguel-BL/tiamat-notification/internal/api/ignition/controller"
 	"github.com/aws/aws-lambda-go/events"
 )
 

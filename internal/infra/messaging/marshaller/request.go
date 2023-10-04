@@ -7,7 +7,7 @@ import (
 )
 
 func UnmarshalRequestBody[T api.RequestBody](req api.Request) (parsedBody T, err error) {
-	err = json.Unmarshal([]byte(req.Body), parsedBody)
+	err = json.Unmarshal([]byte(req.Body), &parsedBody)
 	if err != nil {
 		return parsedBody, err
 	}

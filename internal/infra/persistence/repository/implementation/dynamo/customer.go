@@ -2,6 +2,7 @@ package dynamo
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
@@ -33,7 +34,7 @@ func (r DynamoCustomerRepo) Save(ctx context.Context, customer model.Customer) (
 	if err != nil {
 		return err
 	}
-
+	fmt.Printf("asdfasdfas\n\n\n")
 	err = r.client.BatchWrite(ctx, items, customerTableName)
 	if err != nil {
 		return err

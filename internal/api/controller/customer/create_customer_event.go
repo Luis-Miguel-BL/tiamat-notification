@@ -41,6 +41,8 @@ func (c *CreateCustomerEventController) Execute(ctx context.Context, rawRequest 
 	})
 	if err != nil {
 		res.StatusCode = http.StatusBadRequest
+		res.Body = err.Error()
+		return
 	}
 
 	res.StatusCode = http.StatusOK

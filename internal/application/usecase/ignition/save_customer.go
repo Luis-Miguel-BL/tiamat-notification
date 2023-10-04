@@ -2,10 +2,11 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/application/repository"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/application/usecase/ignition/input"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/repository"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/vo"
 )
 
@@ -74,7 +75,7 @@ func (uc *SaveCustomerUsecase) SaveCustomer(ctx context.Context, input input.Sav
 			CustomAttr: customAttr,
 		})
 	}
-
+	fmt.Printf("\n\n\njsalkfjalskfjaslkdfjaklsdfhakjsfhaijksfh")
 	err = uc.repo.Save(ctx, *customer)
 
 	return err
