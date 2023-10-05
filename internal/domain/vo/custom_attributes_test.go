@@ -1,7 +1,6 @@
 package vo
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -37,7 +36,6 @@ func TestFlatten(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	flattenCustomAttr := customAttributes.Flatten()
-	fmt.Printf("flattenCustomAttr %+v \n", flattenCustomAttr)
 
 	tests := map[string]testScenarios{
 		"get-unknown-field":                {dotNotationExpression: "unknown", expectedValue: nil, expectedFound: false},

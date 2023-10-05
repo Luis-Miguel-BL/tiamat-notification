@@ -8,7 +8,7 @@ import (
 
 var CustomerMatchedEventType = domain.EventType("customer-matched")
 
-type CustomerMatched struct {
+type CustomerMatchedEvent struct {
 	*domain.DomainEventBase
 	CustomerID  string    `json:"customer_id"`
 	WorkspaceID string    `json:"workspace_id"`

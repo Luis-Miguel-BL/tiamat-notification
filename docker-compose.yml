@@ -1,0 +1,43 @@
+version: '3'
+services:
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    networks:
+      - timat_network
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./.docker/mongo-data:/data/db 
+    networks:
+      - timat_network
+
+  # api:
+  #   build:
+  #     context: .
+  #     dockerfile: ./cmd/local/api/Dockerfile 
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - redis
+  #     - mongo
+  #   networks:
+  #     - timat_network
+
+  # consumer:
+  #   build:
+  #     context: .
+  #     dockerfile: ./cmd/local/consumer/Dockerfile
+  #   depends_on:
+  #     - redis
+  #     - mongo
+  #   networks:
+  #     - timat_network
+
+
+networks:
+  timat_network:

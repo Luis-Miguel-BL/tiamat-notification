@@ -25,6 +25,7 @@ func NewSaveCustomerController(saveCustomerUsecase *usecase.SaveCustomerUsecase,
 }
 
 func (c *SaveCustomerController) Execute(ctx context.Context, rawRequest api.Request) (res api.Response) {
+	c.log.Debugf("raw-request %+v", rawRequest)
 	req, err := marshaller.UnmarshalRequestBody[*request.SaveCustomer](rawRequest)
 	if err != nil {
 		res.StatusCode = http.StatusBadRequest

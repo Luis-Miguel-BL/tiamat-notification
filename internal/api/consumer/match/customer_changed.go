@@ -7,9 +7,8 @@ import (
 	usecase "github.com/Luis-Miguel-BL/tiamat-notification/internal/application/usecase/match"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/application/usecase/match/input"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/event"
+	domain_event "github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/event"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/logger"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/messaging/marshaller"
 )
 
 type CustomerChangedEventConsumer struct {
@@ -24,33 +23,21 @@ func NewCustomerChangedEventConsumer(matchCustomerUsecase *usecase.MatchCustomer
 	}
 }
 
-func (c *CustomerChangedEventConsumer) Consume(ctx context.Context, eventType domain.EventType, eventStr string) (err error) {
+func (c *CustomerChangedEventConsumer) Consume(ctx context.Context, eventOccurred domain.DomainEvent) (err error) {
 	var ucInput input.MatchCustomerInput
 
-	switch eventType {
-	case event.CustomerCreatedEventType:
-		event, err := marshaller.UnmarshalDomainEvent[*event.CustomerCreatedEvent](eventStr)
-		if err != nil {
-			return err
-		}
+	switch event := eventOccurred.(type) {
+	case domain_event.CustomerCreatedEvent:
 		ucInput.CustomerID = event.CustomerID
 		ucInput.WorkspaceID = event.WorkspaceID
-	case event.CustomerUpdatedEventType:
-		event, err := marshaller.UnmarshalDomainEvent[*event.CustomerUpdatedEvent](eventStr)
-		if err != nil {
-			return err
-		}
+	case domain_event.CustomerUpdatedEvent:
 		ucInput.CustomerID = event.CustomerID
 		ucInput.WorkspaceID = event.WorkspaceID
-	case event.CustomerEventOccurredEventType:
-		event, err := marshaller.UnmarshalDomainEvent[*event.CustomerEventOccurredEvent](eventStr)
-		if err != nil {
-			return err
-		}
+	case domain_event.CustomerEventOccurredEvent:
 		ucInput.CustomerID = event.CustomerID
 		ucInput.WorkspaceID = event.WorkspaceID
 	default:
-		return fmt.Errorf("invalid event-type %s", eventType)
+		return fmt.Errorf("invalid event-type %s", eventOccurred.EventType())
 	}
 
 	err = c.uc.MatchCustomer(ctx, ucInput)

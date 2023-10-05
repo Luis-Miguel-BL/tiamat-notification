@@ -100,7 +100,7 @@ func (e *Journey) AppendNextStepJourney(actionID ActionID) (err error) {
 	e.steps[actionID] = *newStepJourney
 	e.currentActionID = actionID
 
-	e.AggregateRoot.AppendEvent(event.ActionTrigged{
+	e.AggregateRoot.AppendEvent(event.ActionTriggedEvent{
 		DomainEventBase: domain.NewDomainEventBase(domain.NewDomainEventBaseInput{
 			EventType:     event.ActionTriggedEventType,
 			OccurredAt:    newStepJourney.TriggeredAt(),

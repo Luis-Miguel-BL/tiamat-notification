@@ -8,7 +8,7 @@ import (
 
 var ActionTriggedEventType = domain.EventType("action-trigged")
 
-type ActionTrigged struct {
+type ActionTriggedEvent struct {
 	*domain.DomainEventBase
 	CustomerID    string    `json:"customer_id"`
 	WorkspaceID   string    `json:"workspace_id"`

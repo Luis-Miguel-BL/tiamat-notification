@@ -1,4 +1,4 @@
-package event_bridge
+package event_bus
 
 import (
 	"context"
@@ -48,4 +48,8 @@ func (e *EventBridgeClient) Publish(ctx context.Context, event domain.DomainEven
 		return err
 	}
 	return nil
+}
+
+func (e *EventBridgeClient) Subscribe(ctx context.Context, messages chan domain.DomainEvent, eventTypes ...domain.EventType) (err error) {
+	return err
 }

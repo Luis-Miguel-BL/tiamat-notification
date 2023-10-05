@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/application/usecase/match/input"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/model"
@@ -35,12 +36,14 @@ func (uc *MatchCustomerUsecase) MatchCustomer(ctx context.Context, input input.M
 	if err != nil {
 		return err
 	}
+	fmt.Printf("match customer input %+v", input)
 	customerID := model.CustomerID(input.CustomerID)
 	workspaceID := model.WorkspaceID(input.WorkspaceID)
 	customer, err := uc.customerRepo.GetByID(ctx, customerID, workspaceID)
 	if err != nil {
 		return err
 	}
+	fmt.Printf("customer %+v", customer)
 	defer func() {
 		uc.customerRepo.Save(ctx, *customer)
 	}()

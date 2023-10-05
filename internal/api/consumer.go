@@ -7,5 +7,5 @@ import (
 )
 
 type EventConsumer interface {
-	Consume(ctx context.Context, eventType domain.EventType, eventStr string) (err error)
+	Consume(ctx context.Context, event domain.DomainEvent) (err error)
 }

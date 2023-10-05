@@ -8,7 +8,7 @@ import (
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/domain/gateway"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/logger"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/messaging"
-	"github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/messaging/event_bus/event_bridge"
+	"github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/messaging/event_bus"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/infra/persistence/repository"
 	"github.com/Luis-Miguel-BL/tiamat-notification/internal/server"
 )
@@ -18,7 +18,7 @@ func main() {
 	config := config.LoadConfig()
 	log := logger.NewZerologger(config.AppName)
 	log.SetLevel(logger.Debug)
-	eventBus := event_bridge.NewEventBridgeClient(config.EventBridge, log, config.AppName)
+	eventBus := event_bus.NewRedisClient(config.Redis, log, config.AppName)
 	eventDispatcher := messaging.NewAggregateEventDispatcher(eventBus)
 	repoManager, err := repository.NewRepositoryManager(ctx, *eventDispatcher, config.DBConfig, log)
 	if err != nil {

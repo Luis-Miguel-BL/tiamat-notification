@@ -6,6 +6,7 @@ type Config struct {
 	AppName     string
 	EntryPoint  string
 	EventBridge EventBridgeConfig
+	Redis       RedisConfig
 	DBConfig    DBConfig
 	Server      ServerConfig
 }
@@ -13,6 +14,11 @@ type Config struct {
 type EventBridgeConfig struct {
 	Region       string
 	EventBusName string
+}
+type RedisConfig struct {
+	Address  string
+	Password string
+	DB       int
 }
 type DBConfig struct {
 	InMemory     bool
